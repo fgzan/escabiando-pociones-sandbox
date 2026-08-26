@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prueba de login — Escabiando Pociones</title>
+<style>
+  :root {
+    --bg: #171a33; --bg-elevated: #262b52; --bg-card: #2c3160; --line: #40447a;
+    --cyan: #86e6f6; --pink: #fa7fb7; --pink-hot: #f25481; --purple: #6047eb;
+    --ink: #f4f3ff; --ink-dim: #b7bce0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); color: var(--ink); font-family: system-ui, sans-serif;
+  }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 32px; width: 100%; max-width: 380px;
+  }
+  h1 { font-size: 1.3rem; margin: 0 0 6px; }
+  p.sub { color: var(--ink-dim); font-size: 0.9rem; margin: 0 0 24px; }
+  label { display: block; font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 6px; }
+  input {
+    width: 100%; background: var(--bg-elevated); border: 1px solid var(--line);
+    border-radius: 6px; color: var(--ink); padding: 10px 12px; font-size: 0.95rem; margin-bottom: 16px;
+  }
+  button {
+    width: 100%; background: linear-gradient(135deg, var(--purple), var(--pink-hot));
+    color: var(--ink); border: none; border-radius: 6px; padding: 12px; font-size: 0.95rem;
+    cursor: pointer; font-weight: 600;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .msg { font-size: 0.85rem; margin-top: 14px; padding: 10px 12px; border-radius: 6px; }
+  .msg-err { background: rgba(242,84,129,0.1); border: 1px solid var(--pink-hot); color: var(--pink); }
+  .msg-ok { background: rgba(134,230,246,0.1); border: 1px solid var(--cyan); color: var(--cyan); }
+  .hidden { display: none; }
+  .logout-btn { background: var(--bg-elevated); border: 1px solid var(--line); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div id="login-view">
+    <h1>Panel de prueba</h1>
+    <p class="sub">Entrá con tu mail y contraseña.</p>
+    <label>Mail</label>
+    <input type="email" id="email" autocomplete="email">
+    <label>Contraseña</label>
+    <input type="password" id="password" autocomplete="current-password">
+    <button id="login-btn" onclick="login()">Entrar</button>
+    <div id="login-msg"></div>
+  </div>
+
+  <div id="app-view" class="hidden">
+    <h1>¡Estás adentro!</h1>
+    <p class="sub" id="user-email"></p>
+    <p>Esto es solo la prueba de que el login funciona. Cuando lo demos por bueno, acá va a ir el mismo formulario de carga de notas que ya tenemos en el panel real.</p>
+    <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // COMPLETAR: pegá acá la URL y la clave "anon public" de tu proyecto
+  // de Supabase (Settings → API en el panel de Supabase). La clave
+  // "anon" está pensada para exponerse en el navegador, no es secreta.
+  const SUPABASE_URL = "https://mmhzgamixbnawbjhmagt.supabase.co/rest/v1/";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+    const msg = document.getElementById('login-msg');
+    msg.innerHTML = '';
+    btn.disabled = true;
+    btn.textContent = 'Entrando…';
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+
+    if (error) {
+      msg.innerHTML = `<div class="msg msg-err">${error.message}</div>`;
+      return;
+    }
+    showApp(data.user);
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    document.getElementById('app-view').classList.add('hidden');
+    document.getElementById('login-view').classList.remove('hidden');
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+  }
+
+  function showApp(user) {
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('app-view').classList.remove('hidden');
+    document.getElementById('user-email').textContent = user.email;
+  }
+
+  // Si ya había una sesión activa guardada (por ejemplo, volviste a
+  // entrar sin haber cerrado sesión antes), la retoma sola.
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) showApp(data.session.user);
+  });
+</script>
+
+</body>
+</html>
