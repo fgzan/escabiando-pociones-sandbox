@@ -3,164 +3,231 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel (login con mail) — Escabiando Pociones</title>
+<title>Panel de carga — Escabiando Pociones</title>
+<link rel="icon" href="assets/logo-full.png">
+<link rel="stylesheet" href="style.css">
 <style>
-  :root {
-    --bg: #171a33; --bg-elevated: #262b52; --bg-card: #2c3160; --line: #40447a;
-    --cyan: #86e6f6; --pink: #fa7fb7; --pink-hot: #f25481; --purple: #6047eb;
-    --ink: #f4f3ff; --ink-dim: #b7bce0;
+  .field { margin-bottom: 16px; }
+  .field label { display:block; font-family: var(--f-mono); font-size:0.8rem; color: var(--ink-dim); margin-bottom:6px; }
+  .field input, .field textarea, .field select {
+    width:100%; background: var(--bg-elevated); border:1px solid var(--line);
+    border-radius: var(--radius); color: var(--ink); padding:10px 12px; font-family: var(--f-body); font-size:0.95rem;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
-    font-family: system-ui, sans-serif; padding: 24px;
-  }
-  .center { display: flex; align-items: center; justify-content: center; min-height: 90vh; }
-  .card {
-    background: var(--bg-card); border: 1px solid var(--line); border-radius: 8px; padding: 32px;
-  }
-  .login-card { width: 100%; max-width: 380px; }
-  h1 { font-size: 1.3rem; margin: 0 0 6px; }
-  h2 { font-size: 1.1rem; margin: 28px 0 14px; }
-  p.sub { color: var(--ink-dim); font-size: 0.9rem; margin: 0 0 24px; }
-  label { display: block; font-size: 0.85rem; color: var(--ink-dim); margin-bottom: 6px; }
-  input, textarea {
-    width: 100%; background: var(--bg-elevated); border: 1px solid var(--line);
-    border-radius: 6px; color: var(--ink); padding: 10px 12px; font-size: 0.95rem; margin-bottom: 16px;
-    font-family: inherit;
-  }
-  textarea { min-height: 140px; resize: vertical; }
-  button {
-    background: linear-gradient(135deg, var(--purple), var(--pink-hot));
-    color: var(--ink); border: none; border-radius: 6px; padding: 11px 18px; font-size: 0.9rem;
-    cursor: pointer; font-weight: 600;
-  }
-  button.ghost { background: var(--bg-elevated); border: 1px solid var(--line); }
-  button:disabled { opacity: 0.6; cursor: default; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-  .msg { font-size: 0.85rem; margin: 14px 0; padding: 10px 12px; border-radius: 6px; }
-  .msg-err { background: rgba(242,84,129,0.1); border: 1px solid var(--pink-hot); color: var(--pink); }
-  .msg-ok { background: rgba(134,230,246,0.1); border: 1px solid var(--cyan); color: var(--cyan); }
-  .hidden { display: none; }
-  .container { max-width: 760px; margin: 0 auto; }
-  .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .field textarea { min-height: 160px; resize: vertical; font-family: var(--f-mono); font-size:0.85rem; }
+  .field small { display:block; margin-top:4px; color: var(--ink-dim); font-size:0.78rem; }
+
+  .login-wrap { min-height: 80vh; display:flex; align-items:center; justify-content:center; }
+  .login-card { width:100%; max-width: 400px; }
+
+  .tabs { display:flex; gap:10px; margin-bottom:28px; flex-wrap: wrap; }
   .tab-btn {
-    background: var(--bg-elevated); border: 1px solid var(--line); color: var(--ink-dim);
-    padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;
+    font-family: var(--f-mono); font-size:0.85rem; padding:10px 18px; border-radius: var(--radius);
+    border:1px solid var(--line); background: var(--bg-elevated); color: var(--ink-dim); cursor:pointer;
   }
-  .tab-btn.active { color: var(--ink); border-color: var(--cyan); }
+  .tab-btn.active { color: var(--ink); border-color: var(--cyan-bright); }
+
   .entry-row {
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-    padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; margin-bottom: 8px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:14px 16px; border:1px solid var(--line); border-radius: var(--radius); margin-bottom:10px; flex-wrap: wrap;
   }
-  .entry-row small { color: var(--ink-dim); display: block; margin-top: 2px; }
-  .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
-  .badge-draft { background: rgba(250,127,183,0.15); color: var(--pink); border: 1px solid var(--pink-hot); }
-  .badge-live { background: rgba(134,230,246,0.15); color: var(--cyan); border: 1px solid var(--cyan); }
-  .form-box { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 20px; }
-  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-  .checkbox-row input { width: auto; margin: 0; }
+  .entry-row .meta { font-family: var(--f-mono); font-size:0.8rem; color: var(--ink-dim); }
+  .badge { font-family: var(--f-mono); font-size:0.7rem; padding:3px 8px; border-radius:20px; display:inline-block; margin-left:8px; }
+  .badge-draft { background: rgba(250,127,183,0.15); color: var(--pink); border:1px solid var(--pink-hot); }
+  .badge-live { background: rgba(134,230,246,0.15); color: var(--cyan-bright); border:1px solid var(--cyan); }
+
+  .status-msg { font-family: var(--f-mono); font-size:0.85rem; padding:12px 14px; border-radius: var(--radius); margin: 16px 0; }
+  .status-ok { background: rgba(134,230,246,0.1); border:1px solid var(--cyan); color: var(--cyan-bright); }
+  .status-err { background: rgba(242,84,129,0.1); border:1px solid var(--pink-hot); color: var(--pink); }
+
+  .split { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+  .preview-pane {
+    background: var(--bg-elevated); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; min-height: 160px; max-height: 400px; overflow-y:auto;
+  }
+  .preview-pane h1, .preview-pane h2, .preview-pane h3 { font-size:1.1rem; }
+  .preview-pane img { border-radius: var(--radius); margin: 10px 0; max-width: 100%; }
+
+  .toolbar { display:flex; gap:8px; margin-bottom:8px; flex-wrap: wrap; }
+  .toolbar button {
+    font-family: var(--f-mono); font-size:0.75rem; padding:6px 10px; border-radius: var(--radius);
+    border:1px solid var(--line); background: var(--bg-elevated); color: var(--ink-dim); cursor:pointer;
+  }
+  .toolbar button:hover { color: var(--cyan-bright); border-color: var(--cyan-bright); }
+
+  .cover-preview { max-width: 220px; border-radius: var(--radius); border:1px solid var(--line); margin-top:8px; display:none; }
+  .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--ink-dim); border-top-color: var(--cyan-bright); border-radius:50%; animation: spin 0.7s linear infinite; margin-right:6px; vertical-align:-2px;}
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .form-title { display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap; gap:10px; }
+  .hidden { display:none !important; }
+  .panel-header { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap: wrap; }
+  input[type="file"] { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim); }
 </style>
 </head>
 <body>
 
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <img src="assets/logo-full.png" alt="Escabiando Pociones">
+      ESCABIANDO POCIONES
+    </a>
+  </div>
+</nav>
+
 <!-- ===================== LOGIN ===================== -->
-<div id="login-screen" class="center">
+<div id="login-screen" class="container login-wrap">
   <div class="card login-card">
-    <h1>Panel de carga</h1>
-    <p class="sub">Entrá con tu mail y contraseña.</p>
-    <label>Mail</label>
-    <input type="email" id="email" autocomplete="email">
-    <label>Contraseña</label>
-    <input type="password" id="password" autocomplete="current-password">
-    <button id="login-btn" onclick="login()" style="width:100%;">Entrar</button>
+    <span class="eyebrow">// Panel interno</span>
+    <h1 style="font-size:1.5rem;">Ingresar</h1>
+    <p style="color:var(--ink-dim); margin-bottom:24px;">Entrá con tu mail y contraseña.</p>
+    <div class="field">
+      <label>Mail</label>
+      <input type="email" id="email" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="login-btn" onclick="login()" style="width:100%; justify-content:center;">Entrar</button>
     <div id="login-msg"></div>
   </div>
 </div>
 
 <!-- ===================== PANEL ===================== -->
-<div id="app-screen" class="hidden container">
-  <div class="top-row">
-    <div>
-      <h1 style="margin-bottom:2px;">Panel de carga</h1>
-      <p class="sub" id="user-email" style="margin:0;"></p>
+<div id="app-screen" class="hidden">
+  <header class="page-header">
+    <div class="container panel-header">
+      <div>
+        <span class="eyebrow">// Panel interno</span>
+        <h1 style="margin-bottom:0;">Cargar contenido</h1>
+        <p style="color:var(--ink-dim); font-family:var(--f-mono); font-size:0.85rem; margin:4px 0 0;" id="user-email"></p>
+      </div>
+      <button class="btn btn-ghost" onclick="logout()">Cerrar sesión</button>
     </div>
-    <button class="ghost" onclick="logout()">Cerrar sesión</button>
-  </div>
+  </header>
 
-  <div id="global-msg"></div>
+  <section class="section">
+    <div class="container" style="max-width: 860px;">
+      <div id="global-msg"></div>
 
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-reviews-btn" onclick="switchTab('reviews')">Reviews</button>
-    <button class="tab-btn" id="tab-noticias-btn" onclick="switchTab('noticias')">Noticias</button>
-  </div>
-
-  <!-- ---------- REVIEWS ---------- -->
-  <div id="tab-reviews">
-    <div id="reviews-list"></div>
-
-    <div class="form-box">
-      <h2 id="r-form-title">Agregar nueva review</h2>
-      <label>Título de la review</label>
-      <input type="text" id="r-title" oninput="autoSlug('r')">
-      <label>Juego</label>
-      <input type="text" id="r-game">
-      <label>Slug (parte de la URL)</label>
-      <input type="text" id="r-slug">
-      <label>Puntaje (0 a 10)</label>
-      <input type="number" id="r-score" min="0" max="10" step="0.5">
-      <label>Resumen corto</label>
-      <textarea id="r-excerpt" style="min-height:70px;"></textarea>
-      <label>Texto completo (admite markdown)</label>
-      <textarea id="r-body"></textarea>
-      <label>Autor/a</label>
-      <input type="text" id="r-author">
-      <div class="checkbox-row">
-        <input type="checkbox" id="r-draft">
-        <label style="margin:0;">Guardar como borrador (no se muestra en la web)</label>
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-reviews-btn" onclick="switchTab('reviews')">Reviews</button>
+        <button class="tab-btn" id="tab-noticias-btn" onclick="switchTab('noticias')">Noticias</button>
       </div>
-      <div class="row">
-        <button onclick="saveReview()">Guardar</button>
-        <button class="ghost hidden" id="r-cancel-btn" onclick="resetReviewForm()">Cancelar edición</button>
+
+      <!-- ---------- REVIEWS ---------- -->
+      <div id="tab-reviews">
+        <h2>Reviews publicadas</h2>
+        <div id="reviews-list"></div>
+
+        <h3 class="form-title"><span id="r-form-title">Agregar nueva review</span></h3>
+
+        <div class="field"><label>Título de la review</label><input type="text" id="r-title" oninput="autoSlug('r')"></div>
+        <div class="field"><label>Juego</label><input type="text" id="r-game"></div>
+        <div class="field">
+          <label>Slug (parte de la URL)</label>
+          <input type="text" id="r-slug">
+          <small>Se genera solo a partir del título. Si estás editando una review existente, no lo cambies.</small>
+        </div>
+        <div class="field"><label>Puntaje (0 a 10)</label><input type="number" id="r-score" min="0" max="10" step="0.5"></div>
+
+        <div class="field">
+          <label>Imagen de portada (opcional)</label>
+          <input type="file" id="r-cover-file" accept="image/*" onchange="uploadCover('r')">
+          <input type="hidden" id="r-cover">
+          <img id="r-cover-preview" class="cover-preview">
+        </div>
+
+        <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="r-excerpt" style="min-height:80px;"></textarea></div>
+
+        <div class="field">
+          <label>Texto completo (admite markdown)</label>
+          <div class="toolbar">
+            <button type="button" onclick="wrapSelection('r-body','**','**')">Negrita</button>
+            <button type="button" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
+            <button type="button" onclick="insertText('r-body','\n## ')">Subtítulo</button>
+            <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this)">
+            <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
+          </div>
+          <div class="split">
+            <textarea id="r-body" oninput="updatePreview('r')"></textarea>
+            <div class="preview-pane" id="r-preview"><span style="color:var(--ink-dim); font-size:0.85rem;">La vista previa aparece acá mientras escribís.</span></div>
+          </div>
+        </div>
+
+        <div class="field"><label>Autor/a</label><input type="text" id="r-author"></div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
+          <input type="checkbox" id="r-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
+        </label>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="r-save-btn" onclick="saveReview()">Guardar</button>
+          <button class="btn btn-ghost hidden" id="r-cancel-btn" onclick="resetReviewForm()">Cancelar edición</button>
+        </div>
       </div>
+
+      <!-- ---------- NOTICIAS ---------- -->
+      <div id="tab-noticias" class="hidden">
+        <h2>Noticias publicadas</h2>
+        <div id="noticias-list"></div>
+
+        <h3 class="form-title"><span id="n-form-title">Agregar nueva noticia</span></h3>
+
+        <div class="field"><label>Título</label><input type="text" id="n-title" oninput="autoSlug('n')"></div>
+        <div class="field">
+          <label>Slug (parte de la URL)</label>
+          <input type="text" id="n-slug">
+          <small>Se genera solo a partir del título. Si estás editando una noticia existente, no lo cambies.</small>
+        </div>
+
+        <div class="field">
+          <label>Imagen de portada (opcional)</label>
+          <input type="file" id="n-cover-file" accept="image/*" onchange="uploadCover('n')">
+          <input type="hidden" id="n-cover">
+          <img id="n-cover-preview" class="cover-preview">
+        </div>
+
+        <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="n-excerpt" style="min-height:80px;"></textarea></div>
+
+        <div class="field">
+          <label>Texto completo (admite markdown)</label>
+          <div class="toolbar">
+            <button type="button" onclick="wrapSelection('n-body','**','**')">Negrita</button>
+            <button type="button" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
+            <button type="button" onclick="insertText('n-body','\n## ')">Subtítulo</button>
+            <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this)">
+            <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
+          </div>
+          <div class="split">
+            <textarea id="n-body" oninput="updatePreview('n')"></textarea>
+            <div class="preview-pane" id="n-preview"><span style="color:var(--ink-dim); font-size:0.85rem;">La vista previa aparece acá mientras escribís.</span></div>
+          </div>
+        </div>
+
+        <div class="field"><label>Autor/a</label><input type="text" id="n-author"></div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
+          <input type="checkbox" id="n-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
+        </label>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="n-save-btn" onclick="saveNoticia()">Guardar</button>
+          <button class="btn btn-ghost hidden" id="n-cancel-btn" onclick="resetNoticiaForm()">Cancelar edición</button>
+        </div>
+      </div>
+
     </div>
-  </div>
-
-  <!-- ---------- NOTICIAS ---------- -->
-  <div id="tab-noticias" class="hidden">
-    <div id="noticias-list"></div>
-
-    <div class="form-box">
-      <h2 id="n-form-title">Agregar nueva noticia</h2>
-      <label>Título</label>
-      <input type="text" id="n-title" oninput="autoSlug('n')">
-      <label>Slug (parte de la URL)</label>
-      <input type="text" id="n-slug">
-      <label>Resumen corto</label>
-      <textarea id="n-excerpt" style="min-height:70px;"></textarea>
-      <label>Texto completo (admite markdown)</label>
-      <textarea id="n-body"></textarea>
-      <label>Autor/a</label>
-      <input type="text" id="n-author">
-      <div class="checkbox-row">
-        <input type="checkbox" id="n-draft">
-        <label style="margin:0;">Guardar como borrador (no se muestra en la web)</label>
-      </div>
-      <div class="row">
-        <button onclick="saveNoticia()">Guardar</button>
-        <button class="ghost hidden" id="n-cancel-btn" onclick="resetNoticiaForm()">Cancelar edición</button>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script>
-  // Datos reales de tu proyecto de Supabase (escabiando-pociones-auth).
   const SUPABASE_URL = "https://mmhzgamixbnawbjhmagt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
-
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let editingReviewSlug = null;
@@ -183,19 +250,14 @@
     btn.textContent = 'Entrar';
 
     if (error) {
-      msg.innerHTML = `<div class="msg msg-err">${error.message}</div>`;
+      msg.innerHTML = `<div class="status-msg status-err">${error.message}</div>`;
       return;
     }
     showApp(data.user);
   }
 
-  // Enter en cualquiera de los dos campos dispara el login, como un form normal.
-  document.getElementById('password').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') login();
-  });
-  document.getElementById('email').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('password').focus();
-  });
+  document.getElementById('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+  document.getElementById('email').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('password').focus(); });
 
   async function logout() {
     await supabase.auth.signOut();
@@ -215,11 +277,9 @@
     renderNoticias();
   }
 
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session) showApp(data.session.user);
-  });
+  supabase.auth.getSession().then(({ data }) => { if (data.session) showApp(data.session.user); });
 
-  // ---------- Llamada a la Edge Function ----------
+  // ---------- Función de Supabase ----------
 
   async function callFn(payload) {
     const { data, error } = await supabase.functions.invoke('save-content', { body: payload });
@@ -241,17 +301,49 @@
     document.getElementById(`${prefix}-slug`).value = slugify(document.getElementById(`${prefix}-title`).value);
   }
 
-  function switchTab(name) {
-    document.getElementById('tab-reviews').classList.toggle('hidden', name !== 'reviews');
-    document.getElementById('tab-noticias').classList.toggle('hidden', name !== 'noticias');
-    document.getElementById('tab-reviews-btn').classList.toggle('active', name === 'reviews');
-    document.getElementById('tab-noticias-btn').classList.toggle('active', name === 'noticias');
+  function updatePreview(prefix) {
+    const body = document.getElementById(`${prefix}-body`).value;
+    const pane = document.getElementById(`${prefix}-preview`);
+    pane.innerHTML = (typeof marked !== 'undefined' && body.trim())
+      ? marked.parse(body)
+      : '<span style="color:var(--ink-dim); font-size:0.85rem;">La vista previa aparece acá mientras escribís.</span>';
+  }
+
+  function wrapSelection(id, before, after) {
+    const el = document.getElementById(id);
+    const start = el.selectionStart, end = el.selectionEnd;
+    const selected = el.value.slice(start, end) || 'texto';
+    el.value = el.value.slice(0, start) + before + selected + after + el.value.slice(end);
+    el.dispatchEvent(new Event('input'));
+    el.focus();
+  }
+
+  function insertText(id, text) {
+    const el = document.getElementById(id);
+    const pos = el.selectionStart;
+    el.value = el.value.slice(0, pos) + text + el.value.slice(pos);
+    el.dispatchEvent(new Event('input'));
+    el.focus();
+  }
+
+  function extOf(filename) {
+    const m = filename.match(/\.[^.]+$/);
+    return m ? m[0].toLowerCase() : '.png';
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   function showGlobalMsg(text, ok) {
     const el = document.getElementById('global-msg');
-    el.innerHTML = `<div class="msg ${ok ? 'msg-ok' : 'msg-err'}">${text}</div>`;
-    if (ok) setTimeout(() => { el.innerHTML = ''; }, 5000);
+    el.innerHTML = `<div class="status-msg ${ok ? 'status-ok' : 'status-err'}">${text}</div>`;
+    if (ok) setTimeout(() => { el.innerHTML = ''; }, 6000);
   }
 
   function escapeHtml(str) {
@@ -260,11 +352,61 @@
     return div.innerHTML;
   }
 
+  // ---------- Imágenes ----------
+
+  async function uploadCover(prefix) {
+    const input = document.getElementById(`${prefix}-cover-file`);
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
+
+    try {
+      showGlobalMsg('Subiendo imagen…', true);
+      const base64 = await fileToBase64(file);
+      const path = `assets/uploads/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, ''))}${extOf(file.name)}`;
+      await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${file.name}` });
+      document.getElementById(`${prefix}-cover`).value = path;
+      const prev = document.getElementById(`${prefix}-cover-preview`);
+      prev.src = URL.createObjectURL(file);
+      prev.style.display = 'block';
+      showGlobalMsg('Imagen subida.', true);
+    } catch (e) {
+      showGlobalMsg('Error al subir la imagen: ' + e.message, false);
+    }
+  }
+
+  async function uploadInline(textareaId, input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
+
+    try {
+      showGlobalMsg('Subiendo imagen…', true);
+      const base64 = await fileToBase64(file);
+      const path = `assets/uploads/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, ''))}${extOf(file.name)}`;
+      await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${file.name}` });
+      insertText(textareaId, `\n![](${path})\n`);
+      showGlobalMsg('Imagen subida e insertada en el texto.', true);
+    } catch (e) {
+      showGlobalMsg('Error al subir la imagen: ' + e.message, false);
+    }
+    input.value = '';
+  }
+
+  // ---------- Tabs ----------
+
+  function switchTab(name) {
+    document.getElementById('tab-reviews').classList.toggle('hidden', name !== 'reviews');
+    document.getElementById('tab-noticias').classList.toggle('hidden', name !== 'noticias');
+    document.getElementById('tab-reviews-btn').classList.toggle('active', name === 'reviews');
+    document.getElementById('tab-noticias-btn').classList.toggle('active', name === 'noticias');
+  }
+
   // ---------- Reviews ----------
 
   async function renderReviews() {
     const list = document.getElementById('reviews-list');
-    list.innerHTML = '<p style="color:var(--ink-dim);">Cargando…</p>';
+    list.innerHTML = '<p style="color:var(--ink-dim);"><span class="spinner"></span>Cargando…</p>';
     try {
       const { items } = await callFn({ action: 'list', path: 'content/reviews' });
       if (!items.length) {
@@ -275,21 +417,23 @@
         const { content } = await callFn({ action: 'get', path: it.path });
         return { slug: it.slug, ...content };
       }));
+      rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
       list.innerHTML = rows.map(r => `
         <div class="entry-row">
           <div>
             <strong>${escapeHtml(r.title)}</strong>
             <span class="badge ${r.draft ? 'badge-draft' : 'badge-live'}">${r.draft ? 'Borrador' : 'Publicada'}</span>
-            <small>${escapeHtml(r.game || '')} ${r.score != null ? '· ' + r.score + '/10' : ''}</small>
+            <div class="meta">${escapeHtml(r.game || '')} ${r.score != null ? '· ' + r.score + '/10' : ''}</div>
           </div>
-          <div class="row" style="margin:0;">
-            <button class="ghost" onclick='editReview(${JSON.stringify(r.slug)})'>Editar</button>
-            <button class="ghost" onclick='deleteReview(${JSON.stringify(r.slug)})'>Borrar</button>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick='editReview(${JSON.stringify(r.slug)})'>Editar</button>
+            <button class="btn btn-ghost" onclick='deleteReview(${JSON.stringify(r.slug)})'>Borrar</button>
           </div>
         </div>
       `).join('');
     } catch (e) {
-      list.innerHTML = `<div class="msg msg-err">Error al cargar: ${e.message}</div>`;
+      list.innerHTML = `<div class="status-msg status-err">Error al cargar: ${e.message}</div>`;
     }
   }
 
@@ -301,10 +445,14 @@
       document.getElementById('r-game').value = content.game || '';
       document.getElementById('r-slug').value = slug;
       document.getElementById('r-score').value = content.score != null ? content.score : '';
+      document.getElementById('r-cover').value = content.cover || '';
       document.getElementById('r-excerpt').value = content.excerpt || '';
       document.getElementById('r-body').value = content.body || '';
       document.getElementById('r-author').value = content.author || '';
       document.getElementById('r-draft').checked = !!content.draft;
+      updatePreview('r');
+      const prev = document.getElementById('r-cover-preview');
+      if (content.cover) { prev.src = content.cover; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
       document.getElementById('r-form-title').textContent = `Editando: ${content.title}`;
       document.getElementById('r-cancel-btn').classList.remove('hidden');
       document.getElementById('r-title').scrollIntoView({ behavior: 'smooth' });
@@ -315,8 +463,10 @@
 
   function resetReviewForm() {
     editingReviewSlug = null;
-    ['r-title','r-game','r-slug','r-score','r-excerpt','r-body'].forEach(id => document.getElementById(id).value = '');
+    ['r-title','r-game','r-slug','r-score','r-cover','r-excerpt','r-body'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('r-draft').checked = false;
+    document.getElementById('r-cover-preview').style.display = 'none';
+    updatePreview('r');
     document.getElementById('r-form-title').textContent = 'Agregar nueva review';
     document.getElementById('r-cancel-btn').classList.add('hidden');
   }
@@ -330,6 +480,7 @@
       title,
       game: document.getElementById('r-game').value.trim(),
       score: document.getElementById('r-score').value !== '' ? parseFloat(document.getElementById('r-score').value) : null,
+      cover: document.getElementById('r-cover').value.trim() || null,
       excerpt: document.getElementById('r-excerpt').value.trim(),
       body: document.getElementById('r-body').value.trim(),
       author: document.getElementById('r-author').value.trim(),
@@ -337,18 +488,30 @@
       draft: document.getElementById('r-draft').checked
     };
 
+    const btn = document.getElementById('r-save-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Guardando…';
+
     try {
+      const isEditing = !!editingReviewSlug;
+      if (isEditing) {
+        const existing = await callFn({ action: 'get', path: `content/reviews/${slug}.json` }).catch(() => null);
+        if (existing && existing.content && existing.content.date) entry.date = existing.content.date;
+      }
       await callFn({
         action: 'put',
         path: `content/reviews/${slug}.json`,
         content: JSON.stringify(entry, null, 2),
-        message: `${editingReviewSlug ? 'Editar' : 'Nueva'} review: ${title}`
+        message: `${isEditing ? 'Editar' : 'Nueva'} review: ${title}`
       });
       showGlobalMsg('Guardado. El sitio se actualiza en un rato corto.', true);
       resetReviewForm();
       renderReviews();
     } catch (e) {
       showGlobalMsg('Error al guardar: ' + e.message, false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
     }
   }
 
@@ -367,7 +530,7 @@
 
   async function renderNoticias() {
     const list = document.getElementById('noticias-list');
-    list.innerHTML = '<p style="color:var(--ink-dim);">Cargando…</p>';
+    list.innerHTML = '<p style="color:var(--ink-dim);"><span class="spinner"></span>Cargando…</p>';
     try {
       const { items } = await callFn({ action: 'list', path: 'content/noticias' });
       if (!items.length) {
@@ -378,20 +541,23 @@
         const { content } = await callFn({ action: 'get', path: it.path });
         return { slug: it.slug, ...content };
       }));
+      rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
       list.innerHTML = rows.map(n => `
         <div class="entry-row">
           <div>
             <strong>${escapeHtml(n.title)}</strong>
             <span class="badge ${n.draft ? 'badge-draft' : 'badge-live'}">${n.draft ? 'Borrador' : 'Publicada'}</span>
+            <div class="meta">${n.date ? new Date(n.date).toLocaleDateString('es-419') : ''}</div>
           </div>
-          <div class="row" style="margin:0;">
-            <button class="ghost" onclick='editNoticia(${JSON.stringify(n.slug)})'>Editar</button>
-            <button class="ghost" onclick='deleteNoticia(${JSON.stringify(n.slug)})'>Borrar</button>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick='editNoticia(${JSON.stringify(n.slug)})'>Editar</button>
+            <button class="btn btn-ghost" onclick='deleteNoticia(${JSON.stringify(n.slug)})'>Borrar</button>
           </div>
         </div>
       `).join('');
     } catch (e) {
-      list.innerHTML = `<div class="msg msg-err">Error al cargar: ${e.message}</div>`;
+      list.innerHTML = `<div class="status-msg status-err">Error al cargar: ${e.message}</div>`;
     }
   }
 
@@ -401,10 +567,14 @@
       editingNoticiaSlug = slug;
       document.getElementById('n-title').value = content.title || '';
       document.getElementById('n-slug').value = slug;
+      document.getElementById('n-cover').value = content.cover || '';
       document.getElementById('n-excerpt').value = content.excerpt || '';
       document.getElementById('n-body').value = content.body || '';
       document.getElementById('n-author').value = content.author || '';
       document.getElementById('n-draft').checked = !!content.draft;
+      updatePreview('n');
+      const prev = document.getElementById('n-cover-preview');
+      if (content.cover) { prev.src = content.cover; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
       document.getElementById('n-form-title').textContent = `Editando: ${content.title}`;
       document.getElementById('n-cancel-btn').classList.remove('hidden');
       document.getElementById('n-title').scrollIntoView({ behavior: 'smooth' });
@@ -415,8 +585,10 @@
 
   function resetNoticiaForm() {
     editingNoticiaSlug = null;
-    ['n-title','n-slug','n-excerpt','n-body'].forEach(id => document.getElementById(id).value = '');
+    ['n-title','n-slug','n-cover','n-excerpt','n-body'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('n-draft').checked = false;
+    document.getElementById('n-cover-preview').style.display = 'none';
+    updatePreview('n');
     document.getElementById('n-form-title').textContent = 'Agregar nueva noticia';
     document.getElementById('n-cancel-btn').classList.add('hidden');
   }
@@ -428,6 +600,7 @@
 
     const entry = {
       title,
+      cover: document.getElementById('n-cover').value.trim() || null,
       excerpt: document.getElementById('n-excerpt').value.trim(),
       body: document.getElementById('n-body').value.trim(),
       author: document.getElementById('n-author').value.trim(),
@@ -435,18 +608,30 @@
       draft: document.getElementById('n-draft').checked
     };
 
+    const btn = document.getElementById('n-save-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Guardando…';
+
     try {
+      const isEditing = !!editingNoticiaSlug;
+      if (isEditing) {
+        const existing = await callFn({ action: 'get', path: `content/noticias/${slug}.json` }).catch(() => null);
+        if (existing && existing.content && existing.content.date) entry.date = existing.content.date;
+      }
       await callFn({
         action: 'put',
         path: `content/noticias/${slug}.json`,
         content: JSON.stringify(entry, null, 2),
-        message: `${editingNoticiaSlug ? 'Editar' : 'Nueva'} noticia: ${title}`
+        message: `${isEditing ? 'Editar' : 'Nueva'} noticia: ${title}`
       });
       showGlobalMsg('Guardado. El sitio se actualiza en un rato corto.', true);
       resetNoticiaForm();
       renderNoticias();
     } catch (e) {
       showGlobalMsg('Error al guardar: ' + e.message, false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
     }
   }
 
