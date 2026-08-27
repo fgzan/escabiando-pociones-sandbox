@@ -13,7 +13,7 @@
     width:100%; background: var(--bg-elevated); border:1px solid var(--line);
     border-radius: var(--radius); color: var(--ink); padding:10px 12px; font-family: var(--f-body); font-size:0.95rem;
   }
-  .field textarea { min-height: 160px; resize: vertical; font-family: var(--f-mono); font-size:0.85rem; }
+  .field textarea { min-height: 260px; resize: vertical; font-family: var(--f-mono); font-size:0.85rem; }
   .field small { display:block; margin-top:4px; color: var(--ink-dim); font-size:0.78rem; }
 
   .login-wrap { min-height: 80vh; display:flex; align-items:center; justify-content:center; }
@@ -38,15 +38,7 @@
   .status-msg { font-family: var(--f-mono); font-size:0.85rem; padding:12px 14px; border-radius: var(--radius); margin: 16px 0; }
   .status-ok { background: rgba(134,230,246,0.1); border:1px solid var(--cyan); color: var(--cyan-bright); }
   .status-err { background: rgba(242,84,129,0.1); border:1px solid var(--pink-hot); color: var(--pink); }
-
-  .split { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
-  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
-  .preview-pane {
-    background: var(--bg-elevated); border:1px solid var(--line); border-radius: var(--radius);
-    padding: 16px 18px; min-height: 160px; max-height: 400px; overflow-y:auto;
-  }
-  .preview-pane h1, .preview-pane h2, .preview-pane h3 { font-size:1.1rem; }
-  .preview-pane img { border-radius: var(--radius); margin: 10px 0; max-width: 100%; }
+  .status-warn { background: rgba(250,127,183,0.08); border:1px solid var(--pink-hot); color: var(--pink); }
 
   .toolbar { display:flex; gap:8px; margin-bottom:8px; flex-wrap: wrap; }
   .toolbar button {
@@ -55,7 +47,14 @@
   }
   .toolbar button:hover { color: var(--cyan-bright); border-color: var(--cyan-bright); }
 
-  .cover-preview { max-width: 220px; border-radius: var(--radius); border:1px solid var(--line); margin-top:8px; display:none; }
+  .dropzone {
+    border: 1px dashed var(--line); border-radius: var(--radius); padding: 18px;
+    text-align: center; cursor: pointer; background: var(--bg-elevated); margin-bottom: 8px;
+  }
+  .dropzone:hover, .dropzone:focus { border-color: var(--cyan-bright); outline: none; }
+  .dropzone span { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim); }
+  .cover-preview { max-width: 240px; border-radius: var(--radius); border:1px solid var(--line); margin-top:10px; display:none; }
+
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--ink-dim); border-top-color: var(--cyan-bright); border-radius:50%; animation: spin 0.7s linear infinite; margin-right:6px; vertical-align:-2px;}
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -63,6 +62,10 @@
   .hidden { display:none !important; }
   .panel-header { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap: wrap; }
   input[type="file"] { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim); }
+
+  .settings-card { margin-bottom: 24px; }
+  .settings-row { display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap; }
+  .settings-row .field { flex: 1; min-width: 200px; margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -112,6 +115,19 @@
     <div class="container" style="max-width: 860px;">
       <div id="global-msg"></div>
 
+      <!-- ---------- Apodo del usuario ---------- -->
+      <div class="card settings-card">
+        <h3 class="mt-0">Tu apodo</h3>
+        <p style="margin-bottom:14px;">Así vas a firmar las reviews y noticias que publiques — nunca tu mail.</p>
+        <div class="settings-row">
+          <div class="field">
+            <input type="text" id="nickname-input" placeholder="ej: Fabro">
+          </div>
+          <button class="btn btn-primary" onclick="saveNickname()">Guardar apodo</button>
+        </div>
+        <div id="nickname-msg"></div>
+      </div>
+
       <div class="tabs">
         <button class="tab-btn active" id="tab-reviews-btn" onclick="switchTab('reviews')">Reviews</button>
         <button class="tab-btn" id="tab-noticias-btn" onclick="switchTab('noticias')">Noticias</button>
@@ -135,7 +151,10 @@
 
         <div class="field">
           <label>Imagen de portada (opcional)</label>
-          <input type="file" id="r-cover-file" accept="image/*" onchange="uploadCover('r')">
+          <div class="dropzone" id="r-cover-drop" tabindex="0" onclick="document.getElementById('r-cover-file').click()">
+            <span>Hacé clic para elegir un archivo, o pegá una imagen acá (Ctrl+V) con el foco en este cuadro</span>
+          </div>
+          <input type="file" id="r-cover-file" accept="image/*" class="hidden" onchange="uploadCover('r', this.files[0])">
           <input type="hidden" id="r-cover">
           <img id="r-cover-preview" class="cover-preview">
         </div>
@@ -148,16 +167,16 @@
             <button type="button" onclick="wrapSelection('r-body','**','**')">Negrita</button>
             <button type="button" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
             <button type="button" onclick="insertText('r-body','\n## ')">Subtítulo</button>
-            <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this)">
+            <button type="button" onclick="insertLink('r-body')">🔗 Link</button>
+            <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this.files[0])">
             <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
           </div>
-          <div class="split">
-            <textarea id="r-body" oninput="updatePreview('r')"></textarea>
-            <div class="preview-pane" id="r-preview"><span style="color:var(--ink-dim); font-size:0.85rem;">La vista previa aparece acá mientras escribís.</span></div>
-          </div>
+          <textarea id="r-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
         </div>
 
-        <div class="field"><label>Autor/a</label><input type="text" id="r-author"></div>
+        <div class="btn-row" style="margin-bottom:20px;">
+          <button class="btn btn-ghost" onclick="openPreview('r')">👁 Vista previa en pestaña nueva</button>
+        </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
           <input type="checkbox" id="r-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
@@ -185,7 +204,10 @@
 
         <div class="field">
           <label>Imagen de portada (opcional)</label>
-          <input type="file" id="n-cover-file" accept="image/*" onchange="uploadCover('n')">
+          <div class="dropzone" id="n-cover-drop" tabindex="0" onclick="document.getElementById('n-cover-file').click()">
+            <span>Hacé clic para elegir un archivo, o pegá una imagen acá (Ctrl+V) con el foco en este cuadro</span>
+          </div>
+          <input type="file" id="n-cover-file" accept="image/*" class="hidden" onchange="uploadCover('n', this.files[0])">
           <input type="hidden" id="n-cover">
           <img id="n-cover-preview" class="cover-preview">
         </div>
@@ -198,16 +220,16 @@
             <button type="button" onclick="wrapSelection('n-body','**','**')">Negrita</button>
             <button type="button" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
             <button type="button" onclick="insertText('n-body','\n## ')">Subtítulo</button>
-            <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this)">
+            <button type="button" onclick="insertLink('n-body')">🔗 Link</button>
+            <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this.files[0])">
             <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
           </div>
-          <div class="split">
-            <textarea id="n-body" oninput="updatePreview('n')"></textarea>
-            <div class="preview-pane" id="n-preview"><span style="color:var(--ink-dim); font-size:0.85rem;">La vista previa aparece acá mientras escribís.</span></div>
-          </div>
+          <textarea id="n-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
         </div>
 
-        <div class="field"><label>Autor/a</label><input type="text" id="n-author"></div>
+        <div class="btn-row" style="margin-bottom:20px;">
+          <button class="btn btn-ghost" onclick="openPreview('n')">👁 Vista previa en pestaña nueva</button>
+        </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
           <input type="checkbox" id="n-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
@@ -230,8 +252,15 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // La web publicada de verdad — se usa para que la portada, las
+  // imágenes del texto y la vista previa se vean bien, ya que este
+  // panel vive en un dominio/repo distinto al del sitio real.
+  const SITE_BASE_URL = "https://fgzan.github.io/escabiando-pociones/";
+
   let editingReviewSlug = null;
   let editingNoticiaSlug = null;
+  let currentUser = null;
+  let currentNickname = '';
 
   // ---------- Login ----------
 
@@ -268,16 +297,41 @@
   }
 
   function showApp(user) {
+    currentUser = user;
+    currentNickname = (user.user_metadata && user.user_metadata.nickname) || '';
+
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     document.getElementById('user-email').textContent = user.email;
-    document.getElementById('r-author').value = document.getElementById('r-author').value || user.email;
-    document.getElementById('n-author').value = document.getElementById('n-author').value || user.email;
+    document.getElementById('nickname-input').value = currentNickname;
+
+    if (!currentNickname) {
+      document.getElementById('nickname-msg').innerHTML =
+        '<div class="status-msg status-warn">Todavía no tenés un apodo puesto — mientras tanto, tu mail va a aparecer como autor. Ponete uno acá arriba.</div>';
+    }
+
     renderReviews();
     renderNoticias();
   }
 
   supabase.auth.getSession().then(({ data }) => { if (data.session) showApp(data.session.user); });
+
+  async function saveNickname() {
+    const nickname = document.getElementById('nickname-input').value.trim();
+    if (!nickname) return;
+    const { data, error } = await supabase.auth.updateUser({ data: { nickname } });
+    const msg = document.getElementById('nickname-msg');
+    if (error) {
+      msg.innerHTML = `<div class="status-msg status-err">Error: ${error.message}</div>`;
+      return;
+    }
+    currentNickname = nickname;
+    msg.innerHTML = '<div class="status-msg status-ok">Apodo guardado. A partir de ahora firma así.</div>';
+  }
+
+  function authorName() {
+    return currentNickname || (currentUser ? currentUser.email : '');
+  }
 
   // ---------- Función de Supabase ----------
 
@@ -301,20 +355,11 @@
     document.getElementById(`${prefix}-slug`).value = slugify(document.getElementById(`${prefix}-title`).value);
   }
 
-  function updatePreview(prefix) {
-    const body = document.getElementById(`${prefix}-body`).value;
-    const pane = document.getElementById(`${prefix}-preview`);
-    pane.innerHTML = (typeof marked !== 'undefined' && body.trim())
-      ? marked.parse(body)
-      : '<span style="color:var(--ink-dim); font-size:0.85rem;">La vista previa aparece acá mientras escribís.</span>';
-  }
-
   function wrapSelection(id, before, after) {
     const el = document.getElementById(id);
     const start = el.selectionStart, end = el.selectionEnd;
     const selected = el.value.slice(start, end) || 'texto';
     el.value = el.value.slice(0, start) + before + selected + after + el.value.slice(end);
-    el.dispatchEvent(new Event('input'));
     el.focus();
   }
 
@@ -322,7 +367,16 @@
     const el = document.getElementById(id);
     const pos = el.selectionStart;
     el.value = el.value.slice(0, pos) + text + el.value.slice(pos);
-    el.dispatchEvent(new Event('input'));
+    el.focus();
+  }
+
+  function insertLink(id) {
+    const el = document.getElementById(id);
+    const start = el.selectionStart, end = el.selectionEnd;
+    const selected = el.value.slice(start, end) || 'texto del link';
+    const url = prompt('¿A dónde tiene que llevar el link?', 'https://');
+    if (!url) return;
+    el.value = el.value.slice(0, start) + `[${selected}](${url})` + el.value.slice(end);
     el.focus();
   }
 
@@ -352,22 +406,28 @@
     return div.innerHTML;
   }
 
-  // ---------- Imágenes ----------
+  // Convierte una ruta relativa (assets/uploads/x.png) en la URL real
+  // del sitio publicado, para que se vea bien acá adentro del panel.
+  function toPreviewUrl(path) {
+    if (!path) return path;
+    if (/^https?:\/\//.test(path)) return path;
+    return SITE_BASE_URL + path.replace(/^\//, '');
+  }
 
-  async function uploadCover(prefix) {
-    const input = document.getElementById(`${prefix}-cover-file`);
-    const file = input.files[0];
+  // ---------- Imágenes: subida (por archivo o por pegado) ----------
+
+  async function uploadCover(prefix, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
 
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
-      const path = `assets/uploads/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, ''))}${extOf(file.name)}`;
-      await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${file.name}` });
+      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'portada')}${extOf(file.name || '.png')}`;
+      await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${path}` });
       document.getElementById(`${prefix}-cover`).value = path;
       const prev = document.getElementById(`${prefix}-cover-preview`);
-      prev.src = URL.createObjectURL(file);
+      prev.src = toPreviewUrl(path);
       prev.style.display = 'block';
       showGlobalMsg('Imagen subida.', true);
     } catch (e) {
@@ -375,22 +435,134 @@
     }
   }
 
-  async function uploadInline(textareaId, input) {
-    const file = input.files[0];
+  async function uploadInline(textareaId, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
 
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
-      const path = `assets/uploads/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, ''))}${extOf(file.name)}`;
-      await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${file.name}` });
+      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'imagen')}${extOf(file.name || '.png')}`;
+      await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${path}` });
       insertText(textareaId, `\n![](${path})\n`);
       showGlobalMsg('Imagen subida e insertada en el texto.', true);
     } catch (e) {
       showGlobalMsg('Error al subir la imagen: ' + e.message, false);
     }
-    input.value = '';
+  }
+
+  // Pegar una imagen (Ctrl+V) directo en el cuerpo del texto.
+  function attachPasteUpload(textareaId) {
+    document.getElementById(textareaId).addEventListener('paste', (e) => {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          uploadInline(textareaId, item.getAsFile());
+          return;
+        }
+      }
+    });
+  }
+  attachPasteUpload('r-body');
+  attachPasteUpload('n-body');
+
+  // Pegar una imagen (Ctrl+V) directo en el recuadro de portada.
+  function attachPasteCover(dropzoneId, prefix) {
+    document.getElementById(dropzoneId).addEventListener('paste', (e) => {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          uploadCover(prefix, item.getAsFile());
+          return;
+        }
+      }
+    });
+  }
+  attachPasteCover('r-cover-drop', 'r');
+  attachPasteCover('n-cover-drop', 'n');
+
+  // ---------- Vista previa real, en pestaña nueva ----------
+
+  function absolutizeImages(markdown) {
+    return (markdown || '').replace(/!\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g, (m, alt, path) => `![${alt}](${toPreviewUrl(path)})`);
+  }
+  function embedYouTubePreview(html) {
+    return html.replace(
+      /<p>\s*<a[^>]*href="https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*"[^>]*>[^<]*<\/a>\s*<\/p>/g,
+      (m, id) => `<div class="embed-wrap" style="margin:20px 0;"><iframe width="100%" height="400" src="https://www.youtube.com/embed/${id}" title="Video de YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+    );
+  }
+  function openLinksNewTabPreview(html) {
+    return html.replace(/<a (?![^>]*target=)/g, '<a target="_blank" rel="noopener" ');
+  }
+
+  function buildPreviewDoc(kind, entry) {
+    let bodyHtml = marked.parse(absolutizeImages(entry.body || ''));
+    bodyHtml = embedYouTubePreview(bodyHtml);
+    bodyHtml = openLinksNewTabPreview(bodyHtml);
+
+    const cover = entry.cover ? `<img src="${toPreviewUrl(entry.cover)}" alt="" style="width:100%; border-radius:6px; margin-bottom:20px;">` : '';
+
+    const scoreBlock = kind === 'review' ? `
+      <span class="eyebrow">${escapeHtml(entry.game || '')}</span>
+      <h1>${escapeHtml(entry.title || 'Sin título')}</h1>
+      <div class="vial-score" style="margin-bottom:8px;">
+        <div class="vial"><div class="vial-fill" style="height:${Math.max(0, Math.min(100, (Number(entry.score) || 0) * 10))}%;"></div></div>
+        ${entry.score != null && entry.score !== '' ? entry.score + ' / 10' : ''}
+      </div>` : `
+      <h1>${escapeHtml(entry.title || 'Sin título')}</h1>`;
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista previa — ${escapeHtml(entry.title || '')}</title>
+<link rel="stylesheet" href="${SITE_BASE_URL}style.css">
+<style>.preview-banner{background:var(--pink-hot);color:#fff;text-align:center;padding:8px;font-family:var(--f-mono);font-size:0.8rem;}</style>
+</head>
+<body>
+<div class="preview-banner">VISTA PREVIA — esto todavía no está publicado</div>
+<header class="page-header">
+  <div class="container">
+    ${cover}
+    ${scoreBlock}
+    <p style="font-family: var(--f-mono); font-size:0.85rem; color: var(--ink-dim);">
+      ${entry.author ? escapeHtml(entry.author) + ' · ' : ''}${new Date().toLocaleDateString('es-419', { year: 'numeric', month: 'long', day: 'numeric' })}
+    </p>
+  </div>
+</header>
+<section class="section">
+  <div class="container" style="max-width: 760px;">
+    ${bodyHtml}
+  </div>
+</section>
+</body>
+</html>`;
+  }
+
+  function openPreview(prefix) {
+    const entry = prefix === 'r' ? {
+      title: document.getElementById('r-title').value,
+      game: document.getElementById('r-game').value,
+      score: document.getElementById('r-score').value,
+      cover: document.getElementById('r-cover').value,
+      body: document.getElementById('r-body').value,
+      author: authorName()
+    } : {
+      title: document.getElementById('n-title').value,
+      body: document.getElementById('n-body').value,
+      cover: document.getElementById('n-cover').value,
+      author: authorName()
+    };
+
+    const html = buildPreviewDoc(prefix === 'r' ? 'review' : 'noticia', entry);
+    const blob = new Blob([html], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank');
   }
 
   // ---------- Tabs ----------
@@ -424,7 +596,7 @@
           <div>
             <strong>${escapeHtml(r.title)}</strong>
             <span class="badge ${r.draft ? 'badge-draft' : 'badge-live'}">${r.draft ? 'Borrador' : 'Publicada'}</span>
-            <div class="meta">${escapeHtml(r.game || '')} ${r.score != null ? '· ' + r.score + '/10' : ''}</div>
+            <div class="meta">${escapeHtml(r.game || '')} ${r.score != null ? '· ' + r.score + '/10' : ''} ${r.author ? '· ' + escapeHtml(r.author) : ''}</div>
           </div>
           <div class="btn-row">
             <button class="btn btn-ghost" onclick='editReview(${JSON.stringify(r.slug)})'>Editar</button>
@@ -448,11 +620,9 @@
       document.getElementById('r-cover').value = content.cover || '';
       document.getElementById('r-excerpt').value = content.excerpt || '';
       document.getElementById('r-body').value = content.body || '';
-      document.getElementById('r-author').value = content.author || '';
       document.getElementById('r-draft').checked = !!content.draft;
-      updatePreview('r');
       const prev = document.getElementById('r-cover-preview');
-      if (content.cover) { prev.src = content.cover; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+      if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
       document.getElementById('r-form-title').textContent = `Editando: ${content.title}`;
       document.getElementById('r-cancel-btn').classList.remove('hidden');
       document.getElementById('r-title').scrollIntoView({ behavior: 'smooth' });
@@ -466,7 +636,6 @@
     ['r-title','r-game','r-slug','r-score','r-cover','r-excerpt','r-body'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('r-draft').checked = false;
     document.getElementById('r-cover-preview').style.display = 'none';
-    updatePreview('r');
     document.getElementById('r-form-title').textContent = 'Agregar nueva review';
     document.getElementById('r-cancel-btn').classList.add('hidden');
   }
@@ -483,7 +652,7 @@
       cover: document.getElementById('r-cover').value.trim() || null,
       excerpt: document.getElementById('r-excerpt').value.trim(),
       body: document.getElementById('r-body').value.trim(),
-      author: document.getElementById('r-author').value.trim(),
+      author: authorName(),
       date: new Date().toISOString(),
       draft: document.getElementById('r-draft').checked
     };
@@ -548,7 +717,7 @@
           <div>
             <strong>${escapeHtml(n.title)}</strong>
             <span class="badge ${n.draft ? 'badge-draft' : 'badge-live'}">${n.draft ? 'Borrador' : 'Publicada'}</span>
-            <div class="meta">${n.date ? new Date(n.date).toLocaleDateString('es-419') : ''}</div>
+            <div class="meta">${n.date ? new Date(n.date).toLocaleDateString('es-419') : ''} ${n.author ? '· ' + escapeHtml(n.author) : ''}</div>
           </div>
           <div class="btn-row">
             <button class="btn btn-ghost" onclick='editNoticia(${JSON.stringify(n.slug)})'>Editar</button>
@@ -570,11 +739,9 @@
       document.getElementById('n-cover').value = content.cover || '';
       document.getElementById('n-excerpt').value = content.excerpt || '';
       document.getElementById('n-body').value = content.body || '';
-      document.getElementById('n-author').value = content.author || '';
       document.getElementById('n-draft').checked = !!content.draft;
-      updatePreview('n');
       const prev = document.getElementById('n-cover-preview');
-      if (content.cover) { prev.src = content.cover; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+      if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
       document.getElementById('n-form-title').textContent = `Editando: ${content.title}`;
       document.getElementById('n-cancel-btn').classList.remove('hidden');
       document.getElementById('n-title').scrollIntoView({ behavior: 'smooth' });
@@ -588,7 +755,6 @@
     ['n-title','n-slug','n-cover','n-excerpt','n-body'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('n-draft').checked = false;
     document.getElementById('n-cover-preview').style.display = 'none';
-    updatePreview('n');
     document.getElementById('n-form-title').textContent = 'Agregar nueva noticia';
     document.getElementById('n-cancel-btn').classList.add('hidden');
   }
@@ -603,7 +769,7 @@
       cover: document.getElementById('n-cover').value.trim() || null,
       excerpt: document.getElementById('n-excerpt').value.trim(),
       body: document.getElementById('n-body').value.trim(),
-      author: document.getElementById('n-author').value.trim(),
+      author: authorName(),
       date: new Date().toISOString(),
       draft: document.getElementById('n-draft').checked
     };
