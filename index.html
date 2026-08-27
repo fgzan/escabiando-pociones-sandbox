@@ -57,7 +57,9 @@
   <div id="app-view" class="hidden">
     <h1>¡Estás adentro!</h1>
     <p class="sub" id="user-email"></p>
-    <p>Esto es solo la prueba de que el login funciona. Cuando lo demos por bueno, acá va a ir el mismo formulario de carga de notas que ya tenemos en el panel real.</p>
+    <p>Este botón prueba el circuito completo: tu sesión llama a la función de Supabase, y la función escribe de verdad una noticia de prueba en el repositorio real (después la borrás desde el panel de siempre, tranquilo).</p>
+    <button onclick="testSave()">Probar guardado real en GitHub</button>
+    <div id="save-msg"></div>
     <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
   </div>
 
@@ -68,8 +70,8 @@
   // COMPLETAR: pegá acá la URL y la clave "anon public" de tu proyecto
   // de Supabase (Settings → API en el panel de Supabase). La clave
   // "anon" está pensada para exponerse en el navegador, no es secreta.
-  const SUPABASE_URL = "https://mmhzgamixbnawbjhmagt.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
+  const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+  const SUPABASE_ANON_KEY = "TU-CLAVE-ANON-PUBLIC";
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -106,6 +108,40 @@
     document.getElementById('login-view').classList.add('hidden');
     document.getElementById('app-view').classList.remove('hidden');
     document.getElementById('user-email').textContent = user.email;
+  }
+
+  async function testSave() {
+    const msg = document.getElementById('save-msg');
+    msg.innerHTML = '<div class="msg msg-ok">Guardando…</div>';
+
+    const testEntry = {
+      title: "Prueba de login con Supabase",
+      slug: "prueba-supabase-login",
+      excerpt: "Esta noticia se creó automáticamente para probar el circuito de login. Se puede borrar tranquilamente.",
+      body: "Si ves esto en la web, el circuito completo (login → función → GitHub) funciona de punta a punta.",
+      author: "Prueba automática",
+      date: new Date().toISOString(),
+      draft: false
+    };
+
+    const { data, error } = await supabase.functions.invoke('save-content', {
+      body: {
+        action: 'put',
+        path: 'content/noticias/prueba-supabase-login.json',
+        content: JSON.stringify(testEntry, null, 2),
+        message: 'Prueba de guardado vía login con Supabase'
+      }
+    });
+
+    if (error) {
+      msg.innerHTML = `<div class="msg msg-err">Error: ${error.message}</div>`;
+      return;
+    }
+    if (data && data.error) {
+      msg.innerHTML = `<div class="msg msg-err">Error: ${data.error}</div>`;
+      return;
+    }
+    msg.innerHTML = '<div class="msg msg-ok">¡Listo! Se guardó de verdad en el repositorio. Dale unos segundos al robotcito y buscala en la web (después la podés borrar desde el panel de siempre).</div>';
   }
 
   // Si ya había una sesión activa guardada (por ejemplo, volviste a
