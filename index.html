@@ -231,10 +231,10 @@
           <div class="field">
             <label>Texto completo (admite markdown)</label>
             <div class="toolbar">
-              <button type="button" onclick="wrapSelection('r-body','**','**')">Negrita</button>
-              <button type="button" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
-              <button type="button" onclick="insertText('r-body','\n## ')">Subtítulo</button>
-              <button type="button" onclick="insertLink('r-body')">🔗 Link</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('r-body','**','**')">Negrita</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="insertText('r-body','\n## ')">Subtítulo</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="insertLink('r-body')">🔗 Link</button>
               <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this.files[0])">
               <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
             </div>
@@ -306,10 +306,10 @@
           <div class="field">
             <label>Texto completo (admite markdown)</label>
             <div class="toolbar">
-              <button type="button" onclick="wrapSelection('n-body','**','**')">Negrita</button>
-              <button type="button" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
-              <button type="button" onclick="insertText('n-body','\n## ')">Subtítulo</button>
-              <button type="button" onclick="insertLink('n-body')">🔗 Link</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('n-body','**','**')">Negrita</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="insertText('n-body','\n## ')">Subtítulo</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="insertLink('n-body')">🔗 Link</button>
               <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this.files[0])">
               <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
             </div>
@@ -353,6 +353,11 @@
     r: { data: [], view: 'grid', sort: 'date-desc', page: 1, folder: 'content/reviews' },
     n: { data: [], view: 'grid', sort: 'date-desc', page: 1, folder: 'content/noticias' }
   };
+
+  // Guarda una URL local (blob:) por cada imagen recién subida en esta
+  // sesión, para poder mostrarla ya mismo en la vista previa sin
+  // esperar a que el sitio publicado la tenga (eso tarda un rato).
+  const localImageCache = {};
 
   // ---------- Login ----------
 
@@ -476,6 +481,7 @@
   function toPreviewUrl(path) {
     if (!path) return path;
     if (/^https?:\/\//.test(path)) return path;
+    if (localImageCache[path]) return localImageCache[path];
     return SITE_BASE_URL + path.replace(/^\//, '');
   }
 
@@ -492,6 +498,7 @@
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
       const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'portada')}${extOf(file.name)}`;
+      localImageCache[path] = localUrl;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${path}` });
       document.getElementById(`${prefix}-cover`).value = path;
       showGlobalMsg('Imagen subida.', true);
@@ -507,6 +514,7 @@
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
       const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'imagen')}${extOf(file.name)}`;
+      localImageCache[path] = URL.createObjectURL(file);
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${path}` });
       insertText(textareaId, `\n![](${path})\n`);
       showGlobalMsg('Imagen subida e insertada en el texto.', true);
@@ -603,7 +611,10 @@
       cover: document.getElementById('n-cover').value, author: authorName()
     };
     const html = buildPreviewDoc(prefix === 'r' ? 'review' : 'noticia', entry);
-    window.open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank');
+    const win = window.open('', '_blank');
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   }
 
   // ---------- Tabs ----------
