@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel de carga — Escabiando Pociones</title>
+<title>Administración de contenido — Escabiando Pociones</title>
 <link rel="icon" href="assets/logo-full.png">
 <link rel="stylesheet" href="style.css">
 <style>
@@ -149,29 +149,30 @@
     <div class="container panel-header">
       <div>
         <span class="eyebrow">// Panel interno</span>
-        <h1 style="margin-bottom:0;">Cargar contenido</h1>
-        <p style="color:var(--ink-dim); font-family:var(--f-mono); font-size:0.85rem; margin:4px 0 0;" id="user-email"></p>
+        <h1 style="margin-bottom:0;">Administración de contenido</h1>
       </div>
-      <button class="btn btn-ghost" onclick="logout()">Cerrar sesión</button>
+      <div style="position:relative; display:flex; align-items:center; gap:10px;">
+        <p style="color:var(--ink-dim); font-family:var(--f-mono); font-size:0.85rem; margin:0;" id="user-email"></p>
+        <button class="btn btn-ghost" onclick="toggleSettings()" title="Configuración">⚙</button>
+        <button class="btn btn-ghost" onclick="logout()">Cerrar sesión</button>
+
+        <!-- ---------- Panel desplegable: apodo del usuario ---------- -->
+        <div id="settings-dropdown" class="card hidden" style="position:absolute; top:calc(100% + 10px); right:0; width:320px; z-index:20;">
+          <h3 class="mt-0">Tu apodo</h3>
+          <p style="margin-bottom:14px;">Así vas a firmar las reviews y noticias que publiques — nunca tu mail.</p>
+          <div class="field">
+            <input type="text" id="nickname-input" placeholder="ej: Fabro">
+          </div>
+          <button class="btn btn-primary" onclick="saveNickname()" style="width:100%; justify-content:center;">Guardar apodo</button>
+          <div id="nickname-msg"></div>
+        </div>
+      </div>
     </div>
   </header>
 
   <section class="section">
     <div class="container" style="max-width: 900px;">
       <div id="global-msg"></div>
-
-      <!-- ---------- Apodo del usuario ---------- -->
-      <div class="card settings-card">
-        <h3 class="mt-0">Tu apodo</h3>
-        <p style="margin-bottom:14px;">Así vas a firmar las reviews y noticias que publiques — nunca tu mail.</p>
-        <div class="settings-row">
-          <div class="field">
-            <input type="text" id="nickname-input" placeholder="ej: Fabro">
-          </div>
-          <button class="btn btn-primary" onclick="saveNickname()">Guardar apodo</button>
-        </div>
-        <div id="nickname-msg"></div>
-      </div>
 
       <div class="tabs">
         <button class="tab-btn active" id="tab-reviews-btn" onclick="switchTab('reviews')">Reviews</button>
@@ -339,7 +340,7 @@
 <script>
   const SUPABASE_URL = "https://mmhzgamixbnawbjhmagt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const SITE_BASE_URL = "https://fgzan.github.io/escabiando-pociones/";
   const PAGE_SIZE = 9;
@@ -369,7 +370,7 @@
     msg.innerHTML = '';
     btn.disabled = true;
     btn.textContent = 'Entrando…';
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     btn.disabled = false;
     btn.textContent = 'Entrar';
     if (error) { msg.innerHTML = `<div class="status-msg status-err">${error.message}</div>`; return; }
@@ -380,7 +381,7 @@
   document.getElementById('email').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('password').focus(); });
 
   async function logout() {
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     document.getElementById('app-screen').classList.add('hidden');
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('email').value = '';
@@ -396,18 +397,19 @@
     document.getElementById('nickname-input').value = currentNickname;
     if (!currentNickname) {
       document.getElementById('nickname-msg').innerHTML =
-        '<div class="status-msg status-warn">Todavía no tenés un apodo puesto — mientras tanto, tu mail va a aparecer como autor. Ponete uno acá arriba.</div>';
+        '<div class="status-msg status-warn">Todavía no tenés un apodo puesto — mientras tanto, tu mail va a aparecer como autor.</div>';
+      document.getElementById('settings-dropdown').classList.remove('hidden');
     }
     loadList('r');
     loadList('n');
   }
 
-  supabase.auth.getSession().then(({ data }) => { if (data.session) showApp(data.session.user); });
+  sb.auth.getSession().then(({ data }) => { if (data.session) showApp(data.session.user); });
 
   async function saveNickname() {
     const nickname = document.getElementById('nickname-input').value.trim();
     if (!nickname) return;
-    const { error } = await supabase.auth.updateUser({ data: { nickname } });
+    const { error } = await sb.auth.updateUser({ data: { nickname } });
     const msg = document.getElementById('nickname-msg');
     if (error) { msg.innerHTML = `<div class="status-msg status-err">Error: ${error.message}</div>`; return; }
     currentNickname = nickname;
@@ -416,10 +418,20 @@
 
   function authorName() { return currentNickname || (currentUser ? currentUser.email : ''); }
 
+  function toggleSettings() {
+    document.getElementById('settings-dropdown').classList.toggle('hidden');
+  }
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('settings-dropdown');
+    if (dropdown.classList.contains('hidden')) return;
+    if (dropdown.contains(e.target) || e.target.closest('[onclick="toggleSettings()"]')) return;
+    dropdown.classList.add('hidden');
+  });
+
   // ---------- Función de Supabase ----------
 
   async function callFn(payload) {
-    const { data, error } = await supabase.functions.invoke('save-content', { body: payload });
+    const { data, error } = await sb.functions.invoke('save-content', { body: payload });
     if (error) throw new Error(error.message || 'Error de conexión con la función');
     if (data && data.error) throw new Error(data.error);
     return data;
@@ -699,8 +711,8 @@
       ? `${escapeHtml(item.game || '')} ${item.score != null ? '· ' + item.score + '/10' : ''}`
       : (item.date ? new Date(item.date).toLocaleDateString('es-419') : '');
     return `
-      <div class="card entry-card" onclick="openEdit('${p}', ${JSON.stringify(item.slug)})">
-        <button class="del-btn" onclick="event.stopPropagation(); deleteEntry('${p}', ${JSON.stringify(item.slug)})" title="Borrar">🗑</button>
+      <div class="card entry-card" onclick='openEdit("${p}", ${JSON.stringify(item.slug)})'>
+        <button class="del-btn" onclick='event.stopPropagation(); deleteEntry("${p}", ${JSON.stringify(item.slug)})' title="Borrar">🗑</button>
         ${cover}
         <span class="badge ${item.draft ? 'badge-draft' : 'badge-live'}">${item.draft ? 'Borrador' : 'Publicada'}</span>
         <h3 style="margin-top:10px;">${escapeHtml(item.title || '')}</h3>
@@ -714,7 +726,7 @@
       ? `${escapeHtml(item.game || '')} ${item.score != null ? '· ' + item.score + '/10' : ''}`
       : (item.date ? new Date(item.date).toLocaleDateString('es-419') : '');
     return `
-      <div class="entry-row" onclick="openEdit('${p}', ${JSON.stringify(item.slug)})">
+      <div class="entry-row" onclick='openEdit("${p}", ${JSON.stringify(item.slug)})'>
         <div class="row-main">
           ${cover}
           <div>
@@ -724,7 +736,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <span class="badge ${item.draft ? 'badge-draft' : 'badge-live'}">${item.draft ? 'Borrador' : 'Publicada'}</span>
-          <button class="btn btn-ghost" onclick="event.stopPropagation(); deleteEntry('${p}', ${JSON.stringify(item.slug)})">Borrar</button>
+          <button class="btn btn-ghost" onclick='event.stopPropagation(); deleteEntry("${p}", ${JSON.stringify(item.slug)})'>Borrar</button>
         </div>
       </div>`;
   }
