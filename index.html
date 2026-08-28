@@ -26,14 +26,58 @@
   }
   .tab-btn.active { color: var(--ink); border-color: var(--cyan-bright); }
 
+  .list-toolbar {
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    flex-wrap: wrap; margin-bottom:20px;
+  }
+  .toolbar-left { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+  .view-btn {
+    font-family: var(--f-mono); font-size:0.8rem; padding:8px 12px; border-radius: var(--radius);
+    border:1px solid var(--line); background: var(--bg-elevated); color: var(--ink-dim); cursor:pointer;
+  }
+  .view-btn.active { color: var(--cyan-bright); border-color: var(--cyan-bright); }
+  #reviews-sort-select, #noticias-sort-select {
+    width:auto; font-family: var(--f-mono); font-size:0.8rem; padding:8px 12px;
+  }
+
+  .entry-card { cursor:pointer; position:relative; }
+  .entry-card img { width:100%; aspect-ratio: 16/9; object-fit: cover; border-radius:4px; margin-bottom:12px; background: var(--bg); }
+  .entry-card .no-cover {
+    width:100%; aspect-ratio: 16/9; border-radius:4px; margin-bottom:12px;
+    background: var(--bg); display:flex; align-items:center; justify-content:center;
+    color: var(--ink-dim); font-family: var(--f-mono); font-size:0.75rem; border:1px dashed var(--line);
+  }
+  .entry-card .del-btn {
+    position:absolute; top:10px; right:10px; background: rgba(23,26,51,0.85); border:1px solid var(--line);
+    border-radius: var(--radius); width:30px; height:30px; color: var(--pink); cursor:pointer; font-size:0.9rem;
+  }
+
   .entry-row {
     display:flex; justify-content:space-between; align-items:center; gap:12px;
-    padding:14px 16px; border:1px solid var(--line); border-radius: var(--radius); margin-bottom:10px; flex-wrap: wrap;
+    padding:12px 14px; border:1px solid var(--line); border-radius: var(--radius); margin-bottom:8px; flex-wrap: wrap;
+    cursor:pointer;
   }
-  .entry-row .meta { font-family: var(--f-mono); font-size:0.8rem; color: var(--ink-dim); }
+  .entry-row img { width:56px; height:36px; object-fit:cover; border-radius:4px; flex-shrink:0; }
+  .entry-row .no-cover-sm {
+    width:56px; height:36px; border-radius:4px; flex-shrink:0; background: var(--bg);
+    border:1px dashed var(--line);
+  }
+  .entry-row .row-main { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+  .entry-row .row-main > div { min-width:0; }
+  .entry-row .row-main strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .meta { font-family: var(--f-mono); font-size:0.8rem; color: var(--ink-dim); }
   .badge { font-family: var(--f-mono); font-size:0.7rem; padding:3px 8px; border-radius:20px; display:inline-block; margin-left:8px; }
   .badge-draft { background: rgba(250,127,183,0.15); color: var(--pink); border:1px solid var(--pink-hot); }
   .badge-live { background: rgba(134,230,246,0.15); color: var(--cyan-bright); border:1px solid var(--cyan); }
+
+  .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin: 24px 0 8px; flex-wrap: wrap; }
+  .pagination button {
+    font-family: var(--f-mono); font-size:0.8rem; padding:7px 12px; border-radius: var(--radius);
+    border:1px solid var(--line); background: var(--bg-elevated); color: var(--ink-dim); cursor:pointer;
+  }
+  .pagination button.active { color: var(--cyan-bright); border-color: var(--cyan-bright); }
+  .pagination button:disabled { opacity:0.4; cursor:default; }
 
   .status-msg { font-family: var(--f-mono); font-size:0.85rem; padding:12px 14px; border-radius: var(--radius); margin: 16px 0; }
   .status-ok { background: rgba(134,230,246,0.1); border:1px solid var(--cyan); color: var(--cyan-bright); }
@@ -50,15 +94,14 @@
   .dropzone {
     border: 1px dashed var(--line); border-radius: var(--radius); padding: 18px;
     text-align: center; cursor: pointer; background: var(--bg-elevated); margin-bottom: 8px;
+    font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim);
   }
   .dropzone:hover, .dropzone:focus { border-color: var(--cyan-bright); outline: none; }
-  .dropzone span { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim); }
   .cover-preview { max-width: 240px; border-radius: var(--radius); border:1px solid var(--line); margin-top:10px; display:none; }
 
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--ink-dim); border-top-color: var(--cyan-bright); border-radius:50%; animation: spin 0.7s linear infinite; margin-right:6px; vertical-align:-2px;}
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .form-title { display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap; gap:10px; }
   .hidden { display:none !important; }
   .panel-header { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap: wrap; }
   input[type="file"] { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim); }
@@ -66,6 +109,8 @@
   .settings-card { margin-bottom: 24px; }
   .settings-row { display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap; }
   .settings-row .field { flex: 1; min-width: 200px; margin-bottom: 0; }
+
+  .empty-hint { color: var(--ink-dim); text-align:center; padding: 40px 20px; border:1px dashed var(--line); border-radius: var(--radius); }
 </style>
 </head>
 <body>
@@ -112,7 +157,7 @@
   </header>
 
   <section class="section">
-    <div class="container" style="max-width: 860px;">
+    <div class="container" style="max-width: 900px;">
       <div id="global-msg"></div>
 
       <!-- ---------- Apodo del usuario ---------- -->
@@ -133,111 +178,155 @@
         <button class="tab-btn" id="tab-noticias-btn" onclick="switchTab('noticias')">Noticias</button>
       </div>
 
-      <!-- ---------- REVIEWS ---------- -->
+      <!-- ======================================================= -->
+      <!-- ---------------------- REVIEWS ------------------------ -->
+      <!-- ======================================================= -->
       <div id="tab-reviews">
-        <h2>Reviews publicadas</h2>
-        <div id="reviews-list"></div>
 
-        <h3 class="form-title"><span id="r-form-title">Agregar nueva review</span></h3>
-
-        <div class="field"><label>Título de la review</label><input type="text" id="r-title" oninput="autoSlug('r')"></div>
-        <div class="field"><label>Juego</label><input type="text" id="r-game"></div>
-        <div class="field">
-          <label>Slug (parte de la URL)</label>
-          <input type="text" id="r-slug">
-          <small>Se genera solo a partir del título. Si estás editando una review existente, no lo cambies.</small>
-        </div>
-        <div class="field"><label>Puntaje (0 a 10)</label><input type="number" id="r-score" min="0" max="10" step="0.5"></div>
-
-        <div class="field">
-          <label>Imagen de portada (opcional)</label>
-          <div class="dropzone" id="r-cover-drop" tabindex="0" onclick="document.getElementById('r-cover-file').click()">
-            <span>Hacé clic para elegir un archivo, o pegá una imagen acá (Ctrl+V) con el foco en este cuadro</span>
+        <!-- ---- Vista de lista ---- -->
+        <div id="reviews-list-view">
+          <div class="list-toolbar">
+            <div class="toolbar-left">
+              <button class="view-btn active" id="r-view-grid-btn" onclick="setView('r','grid')">▦ Cuadros</button>
+              <button class="view-btn" id="r-view-list-btn" onclick="setView('r','list')">☰ Lista</button>
+              <select id="reviews-sort-select" onchange="onSortChange('r')">
+                <option value="date-desc">Más nuevas primero</option>
+                <option value="date-asc">Más viejas primero</option>
+                <option value="alpha-asc">Título A-Z</option>
+                <option value="alpha-desc">Título Z-A</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="startNew('r')">+ Nueva review</button>
           </div>
-          <input type="file" id="r-cover-file" accept="image/*" class="hidden" onchange="uploadCover('r', this.files[0])">
-          <input type="hidden" id="r-cover">
-          <img id="r-cover-preview" class="cover-preview">
+          <div id="reviews-grid"></div>
+          <div id="reviews-pagination" class="pagination"></div>
         </div>
 
-        <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="r-excerpt" style="min-height:80px;"></textarea></div>
+        <!-- ---- Vista de formulario ---- -->
+        <div id="reviews-form-view" class="hidden">
+          <button class="btn btn-ghost" onclick="backToList('r')" style="margin-bottom:20px;">← Volver a la lista</button>
+          <h2 id="r-form-title" style="margin-bottom:20px;">Agregar nueva review</h2>
 
-        <div class="field">
-          <label>Texto completo (admite markdown)</label>
-          <div class="toolbar">
-            <button type="button" onclick="wrapSelection('r-body','**','**')">Negrita</button>
-            <button type="button" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
-            <button type="button" onclick="insertText('r-body','\n## ')">Subtítulo</button>
-            <button type="button" onclick="insertLink('r-body')">🔗 Link</button>
-            <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this.files[0])">
-            <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
+          <div class="field"><label>Título de la review</label><input type="text" id="r-title" oninput="autoSlug('r')"></div>
+          <div class="field"><label>Juego</label><input type="text" id="r-game"></div>
+          <div class="field">
+            <label>Slug (parte de la URL)</label>
+            <input type="text" id="r-slug">
+            <small>Se genera solo a partir del título. Si estás editando una review existente, no lo cambies.</small>
           </div>
-          <textarea id="r-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
-        </div>
+          <div class="field"><label>Puntaje (0 a 10)</label><input type="number" id="r-score" min="0" max="10" step="0.5"></div>
 
-        <div class="btn-row" style="margin-bottom:20px;">
-          <button class="btn btn-ghost" onclick="openPreview('r')">👁 Vista previa en pestaña nueva</button>
-        </div>
+          <div class="field">
+            <label>Imagen de portada (opcional)</label>
+            <div class="dropzone" id="r-cover-drop" contenteditable="true" onclick="document.getElementById('r-cover-file').click()">
+              Hacé clic para elegir un archivo, o pegá una imagen acá (Ctrl+V o click derecho → Pegar)
+            </div>
+            <input type="file" id="r-cover-file" accept="image/*" class="hidden" onchange="uploadCover('r', this.files[0])">
+            <input type="hidden" id="r-cover">
+            <img id="r-cover-preview" class="cover-preview">
+          </div>
 
-        <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
-          <input type="checkbox" id="r-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
-        </label>
+          <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="r-excerpt" style="min-height:80px;"></textarea></div>
 
-        <div class="btn-row">
-          <button class="btn btn-primary" id="r-save-btn" onclick="saveReview()">Guardar</button>
-          <button class="btn btn-ghost hidden" id="r-cancel-btn" onclick="resetReviewForm()">Cancelar edición</button>
+          <div class="field">
+            <label>Texto completo (admite markdown)</label>
+            <div class="toolbar">
+              <button type="button" onclick="wrapSelection('r-body','**','**')">Negrita</button>
+              <button type="button" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
+              <button type="button" onclick="insertText('r-body','\n## ')">Subtítulo</button>
+              <button type="button" onclick="insertLink('r-body')">🔗 Link</button>
+              <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this.files[0])">
+              <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
+            </div>
+            <textarea id="r-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
+          </div>
+
+          <div class="btn-row" style="margin-bottom:20px;">
+            <button class="btn btn-ghost" onclick="openPreview('r')">👁 Vista previa en pestaña nueva</button>
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
+            <input type="checkbox" id="r-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
+          </label>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" id="r-save-btn" onclick="saveReview()">Guardar</button>
+          </div>
         </div>
       </div>
 
-      <!-- ---------- NOTICIAS ---------- -->
+      <!-- ======================================================= -->
+      <!-- ---------------------- NOTICIAS ------------------------ -->
+      <!-- ======================================================= -->
       <div id="tab-noticias" class="hidden">
-        <h2>Noticias publicadas</h2>
-        <div id="noticias-list"></div>
 
-        <h3 class="form-title"><span id="n-form-title">Agregar nueva noticia</span></h3>
-
-        <div class="field"><label>Título</label><input type="text" id="n-title" oninput="autoSlug('n')"></div>
-        <div class="field">
-          <label>Slug (parte de la URL)</label>
-          <input type="text" id="n-slug">
-          <small>Se genera solo a partir del título. Si estás editando una noticia existente, no lo cambies.</small>
-        </div>
-
-        <div class="field">
-          <label>Imagen de portada (opcional)</label>
-          <div class="dropzone" id="n-cover-drop" tabindex="0" onclick="document.getElementById('n-cover-file').click()">
-            <span>Hacé clic para elegir un archivo, o pegá una imagen acá (Ctrl+V) con el foco en este cuadro</span>
+        <!-- ---- Vista de lista ---- -->
+        <div id="noticias-list-view">
+          <div class="list-toolbar">
+            <div class="toolbar-left">
+              <button class="view-btn active" id="n-view-grid-btn" onclick="setView('n','grid')">▦ Cuadros</button>
+              <button class="view-btn" id="n-view-list-btn" onclick="setView('n','list')">☰ Lista</button>
+              <select id="noticias-sort-select" onchange="onSortChange('n')">
+                <option value="date-desc">Más nuevas primero</option>
+                <option value="date-asc">Más viejas primero</option>
+                <option value="alpha-asc">Título A-Z</option>
+                <option value="alpha-desc">Título Z-A</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="startNew('n')">+ Nueva noticia</button>
           </div>
-          <input type="file" id="n-cover-file" accept="image/*" class="hidden" onchange="uploadCover('n', this.files[0])">
-          <input type="hidden" id="n-cover">
-          <img id="n-cover-preview" class="cover-preview">
+          <div id="noticias-grid"></div>
+          <div id="noticias-pagination" class="pagination"></div>
         </div>
 
-        <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="n-excerpt" style="min-height:80px;"></textarea></div>
+        <!-- ---- Vista de formulario ---- -->
+        <div id="noticias-form-view" class="hidden">
+          <button class="btn btn-ghost" onclick="backToList('n')" style="margin-bottom:20px;">← Volver a la lista</button>
+          <h2 id="n-form-title" style="margin-bottom:20px;">Agregar nueva noticia</h2>
 
-        <div class="field">
-          <label>Texto completo (admite markdown)</label>
-          <div class="toolbar">
-            <button type="button" onclick="wrapSelection('n-body','**','**')">Negrita</button>
-            <button type="button" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
-            <button type="button" onclick="insertText('n-body','\n## ')">Subtítulo</button>
-            <button type="button" onclick="insertLink('n-body')">🔗 Link</button>
-            <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this.files[0])">
-            <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
+          <div class="field"><label>Título</label><input type="text" id="n-title" oninput="autoSlug('n')"></div>
+          <div class="field">
+            <label>Slug (parte de la URL)</label>
+            <input type="text" id="n-slug">
+            <small>Se genera solo a partir del título. Si estás editando una noticia existente, no lo cambies.</small>
           </div>
-          <textarea id="n-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
-        </div>
 
-        <div class="btn-row" style="margin-bottom:20px;">
-          <button class="btn btn-ghost" onclick="openPreview('n')">👁 Vista previa en pestaña nueva</button>
-        </div>
+          <div class="field">
+            <label>Imagen de portada (opcional)</label>
+            <div class="dropzone" id="n-cover-drop" contenteditable="true" onclick="document.getElementById('n-cover-file').click()">
+              Hacé clic para elegir un archivo, o pegá una imagen acá (Ctrl+V o click derecho → Pegar)
+            </div>
+            <input type="file" id="n-cover-file" accept="image/*" class="hidden" onchange="uploadCover('n', this.files[0])">
+            <input type="hidden" id="n-cover">
+            <img id="n-cover-preview" class="cover-preview">
+          </div>
 
-        <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
-          <input type="checkbox" id="n-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
-        </label>
+          <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="n-excerpt" style="min-height:80px;"></textarea></div>
 
-        <div class="btn-row">
-          <button class="btn btn-primary" id="n-save-btn" onclick="saveNoticia()">Guardar</button>
-          <button class="btn btn-ghost hidden" id="n-cancel-btn" onclick="resetNoticiaForm()">Cancelar edición</button>
+          <div class="field">
+            <label>Texto completo (admite markdown)</label>
+            <div class="toolbar">
+              <button type="button" onclick="wrapSelection('n-body','**','**')">Negrita</button>
+              <button type="button" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
+              <button type="button" onclick="insertText('n-body','\n## ')">Subtítulo</button>
+              <button type="button" onclick="insertLink('n-body')">🔗 Link</button>
+              <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this.files[0])">
+              <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
+            </div>
+            <textarea id="n-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
+          </div>
+
+          <div class="btn-row" style="margin-bottom:20px;">
+            <button class="btn btn-ghost" onclick="openPreview('n')">👁 Vista previa en pestaña nueva</button>
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
+            <input type="checkbox" id="n-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
+          </label>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" id="n-save-btn" onclick="saveNoticia()">Guardar</button>
+          </div>
         </div>
       </div>
 
@@ -252,15 +341,18 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // La web publicada de verdad — se usa para que la portada, las
-  // imágenes del texto y la vista previa se vean bien, ya que este
-  // panel vive en un dominio/repo distinto al del sitio real.
   const SITE_BASE_URL = "https://fgzan.github.io/escabiando-pociones/";
+  const PAGE_SIZE = 9;
 
-  let editingReviewSlug = null;
-  let editingNoticiaSlug = null;
   let currentUser = null;
   let currentNickname = '';
+  let editingReviewSlug = null;
+  let editingNoticiaSlug = null;
+
+  const state = {
+    r: { data: [], view: 'grid', sort: 'date-desc', page: 1, folder: 'content/reviews' },
+    n: { data: [], view: 'grid', sort: 'date-desc', page: 1, folder: 'content/noticias' }
+  };
 
   // ---------- Login ----------
 
@@ -272,16 +364,10 @@
     msg.innerHTML = '';
     btn.disabled = true;
     btn.textContent = 'Entrando…';
-
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
     btn.disabled = false;
     btn.textContent = 'Entrar';
-
-    if (error) {
-      msg.innerHTML = `<div class="status-msg status-err">${error.message}</div>`;
-      return;
-    }
+    if (error) { msg.innerHTML = `<div class="status-msg status-err">${error.message}</div>`; return; }
     showApp(data.user);
   }
 
@@ -299,19 +385,16 @@
   function showApp(user) {
     currentUser = user;
     currentNickname = (user.user_metadata && user.user_metadata.nickname) || '';
-
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     document.getElementById('user-email').textContent = user.email;
     document.getElementById('nickname-input').value = currentNickname;
-
     if (!currentNickname) {
       document.getElementById('nickname-msg').innerHTML =
         '<div class="status-msg status-warn">Todavía no tenés un apodo puesto — mientras tanto, tu mail va a aparecer como autor. Ponete uno acá arriba.</div>';
     }
-
-    renderReviews();
-    renderNoticias();
+    loadList('r');
+    loadList('n');
   }
 
   supabase.auth.getSession().then(({ data }) => { if (data.session) showApp(data.session.user); });
@@ -319,19 +402,14 @@
   async function saveNickname() {
     const nickname = document.getElementById('nickname-input').value.trim();
     if (!nickname) return;
-    const { data, error } = await supabase.auth.updateUser({ data: { nickname } });
+    const { error } = await supabase.auth.updateUser({ data: { nickname } });
     const msg = document.getElementById('nickname-msg');
-    if (error) {
-      msg.innerHTML = `<div class="status-msg status-err">Error: ${error.message}</div>`;
-      return;
-    }
+    if (error) { msg.innerHTML = `<div class="status-msg status-err">Error: ${error.message}</div>`; return; }
     currentNickname = nickname;
     msg.innerHTML = '<div class="status-msg status-ok">Apodo guardado. A partir de ahora firma así.</div>';
   }
 
-  function authorName() {
-    return currentNickname || (currentUser ? currentUser.email : '');
-  }
+  function authorName() { return currentNickname || (currentUser ? currentUser.email : ''); }
 
   // ---------- Función de Supabase ----------
 
@@ -343,18 +421,14 @@
   }
 
   function slugify(str) {
-    return (str || '').toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
-
   function autoSlug(prefix) {
     const editing = prefix === 'r' ? editingReviewSlug : editingNoticiaSlug;
     if (editing) return;
     document.getElementById(`${prefix}-slug`).value = slugify(document.getElementById(`${prefix}-title`).value);
   }
-
   function wrapSelection(id, before, after) {
     const el = document.getElementById(id);
     const start = el.selectionStart, end = el.selectionEnd;
@@ -362,14 +436,12 @@
     el.value = el.value.slice(0, start) + before + selected + after + el.value.slice(end);
     el.focus();
   }
-
   function insertText(id, text) {
     const el = document.getElementById(id);
     const pos = el.selectionStart;
     el.value = el.value.slice(0, pos) + text + el.value.slice(pos);
     el.focus();
   }
-
   function insertLink(id) {
     const el = document.getElementById(id);
     const start = el.selectionStart, end = el.selectionEnd;
@@ -379,12 +451,10 @@
     el.value = el.value.slice(0, start) + `[${selected}](${url})` + el.value.slice(end);
     el.focus();
   }
-
   function extOf(filename) {
-    const m = filename.match(/\.[^.]+$/);
+    const m = (filename || '').match(/\.[^.]+$/);
     return m ? m[0].toLowerCase() : '.png';
   }
-
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -393,42 +463,37 @@
       reader.readAsDataURL(file);
     });
   }
-
   function showGlobalMsg(text, ok) {
     const el = document.getElementById('global-msg');
     el.innerHTML = `<div class="status-msg ${ok ? 'status-ok' : 'status-err'}">${text}</div>`;
     if (ok) setTimeout(() => { el.innerHTML = ''; }, 6000);
   }
-
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str || '';
     return div.innerHTML;
   }
-
-  // Convierte una ruta relativa (assets/uploads/x.png) en la URL real
-  // del sitio publicado, para que se vea bien acá adentro del panel.
   function toPreviewUrl(path) {
     if (!path) return path;
     if (/^https?:\/\//.test(path)) return path;
     return SITE_BASE_URL + path.replace(/^\//, '');
   }
 
-  // ---------- Imágenes: subida (por archivo o por pegado) ----------
+  // ---------- Imágenes: subida (archivo, pegado, o click derecho → Pegar) ----------
 
   async function uploadCover(prefix, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
-
+    const localUrl = URL.createObjectURL(file);
+    const prev = document.getElementById(`${prefix}-cover-preview`);
+    prev.src = localUrl;
+    prev.style.display = 'block';
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
-      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'portada')}${extOf(file.name || '.png')}`;
+      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'portada')}${extOf(file.name)}`;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${path}` });
       document.getElementById(`${prefix}-cover`).value = path;
-      const prev = document.getElementById(`${prefix}-cover-preview`);
-      prev.src = toPreviewUrl(path);
-      prev.style.display = 'block';
       showGlobalMsg('Imagen subida.', true);
     } catch (e) {
       showGlobalMsg('Error al subir la imagen: ' + e.message, false);
@@ -438,11 +503,10 @@
   async function uploadInline(textareaId, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
-
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
-      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'imagen')}${extOf(file.name || '.png')}`;
+      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'imagen')}${extOf(file.name)}`;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${path}` });
       insertText(textareaId, `\n![](${path})\n`);
       showGlobalMsg('Imagen subida e insertada en el texto.', true);
@@ -451,36 +515,35 @@
     }
   }
 
-  // Pegar una imagen (Ctrl+V) directo en el cuerpo del texto.
   function attachPasteUpload(textareaId) {
     document.getElementById(textareaId).addEventListener('paste', (e) => {
       const items = e.clipboardData && e.clipboardData.items;
       if (!items) return;
       for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          e.preventDefault();
-          uploadInline(textareaId, item.getAsFile());
-          return;
-        }
+        if (item.type.startsWith('image/')) { e.preventDefault(); uploadInline(textareaId, item.getAsFile()); return; }
       }
     });
   }
   attachPasteUpload('r-body');
   attachPasteUpload('n-body');
 
-  // Pegar una imagen (Ctrl+V) directo en el recuadro de portada.
   function attachPasteCover(dropzoneId, prefix) {
-    document.getElementById(dropzoneId).addEventListener('paste', (e) => {
+    const el = document.getElementById(dropzoneId);
+    const placeholder = el.textContent;
+    el.addEventListener('paste', (e) => {
       const items = e.clipboardData && e.clipboardData.items;
-      if (!items) return;
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          e.preventDefault();
-          uploadCover(prefix, item.getAsFile());
-          return;
+      let handled = false;
+      if (items) {
+        for (const item of items) {
+          if (item.type.startsWith('image/')) { e.preventDefault(); uploadCover(prefix, item.getAsFile()); handled = true; break; }
         }
       }
+      if (!handled) e.preventDefault();
     });
+    el.addEventListener('keydown', (e) => {
+      if (!(e.ctrlKey || e.metaKey)) e.preventDefault();
+    });
+    el.addEventListener('input', () => { el.textContent = placeholder; });
   }
   attachPasteCover('r-cover-drop', 'r');
   attachPasteCover('n-cover-drop', 'n');
@@ -490,10 +553,10 @@
   function absolutizeImages(markdown) {
     return (markdown || '').replace(/!\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g, (m, alt, path) => `![${alt}](${toPreviewUrl(path)})`);
   }
-  function embedYouTubePreview(html) {
+  function youtubeCardPreview(html) {
     return html.replace(
-      /<p>\s*<a[^>]*href="https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})[^"]*"[^>]*>[^<]*<\/a>\s*<\/p>/g,
-      (m, id) => `<div class="embed-wrap" style="margin:20px 0;"><iframe width="100%" height="400" src="https://www.youtube.com/embed/${id}" title="Video de YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+      /<p>\s*<a[^>]*href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}[^"]*)"[^>]*>[^<]*<\/a>\s*<\/p>/g,
+      (m, url) => `<div class="card" style="margin:20px 0;"><span class="eyebrow">▶ Video de YouTube</span><p style="margin:0 0 10px;">Acá se va a incrustar el video una vez publicado (no se puede previsualizar embebido en esta pestaña de prueba).</p><a class="btn btn-ghost" href="${url}" target="_blank" rel="noopener">Ver en YouTube →</a></div>`
     );
   }
   function openLinksNewTabPreview(html) {
@@ -502,67 +565,45 @@
 
   function buildPreviewDoc(kind, entry) {
     let bodyHtml = marked.parse(absolutizeImages(entry.body || ''));
-    bodyHtml = embedYouTubePreview(bodyHtml);
+    bodyHtml = youtubeCardPreview(bodyHtml);
     bodyHtml = openLinksNewTabPreview(bodyHtml);
-
     const cover = entry.cover ? `<img src="${toPreviewUrl(entry.cover)}" alt="" style="width:100%; border-radius:6px; margin-bottom:20px;">` : '';
-
     const scoreBlock = kind === 'review' ? `
       <span class="eyebrow">${escapeHtml(entry.game || '')}</span>
       <h1>${escapeHtml(entry.title || 'Sin título')}</h1>
       <div class="vial-score" style="margin-bottom:8px;">
         <div class="vial"><div class="vial-fill" style="height:${Math.max(0, Math.min(100, (Number(entry.score) || 0) * 10))}%;"></div></div>
         ${entry.score != null && entry.score !== '' ? entry.score + ' / 10' : ''}
-      </div>` : `
-      <h1>${escapeHtml(entry.title || 'Sin título')}</h1>`;
+      </div>` : `<h1>${escapeHtml(entry.title || 'Sin título')}</h1>`;
 
     return `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vista previa — ${escapeHtml(entry.title || '')}</title>
 <link rel="stylesheet" href="${SITE_BASE_URL}style.css">
 <style>.preview-banner{background:var(--pink-hot);color:#fff;text-align:center;padding:8px;font-family:var(--f-mono);font-size:0.8rem;}</style>
-</head>
-<body>
+</head><body>
 <div class="preview-banner">VISTA PREVIA — esto todavía no está publicado</div>
-<header class="page-header">
-  <div class="container">
-    ${cover}
-    ${scoreBlock}
-    <p style="font-family: var(--f-mono); font-size:0.85rem; color: var(--ink-dim);">
-      ${entry.author ? escapeHtml(entry.author) + ' · ' : ''}${new Date().toLocaleDateString('es-419', { year: 'numeric', month: 'long', day: 'numeric' })}
-    </p>
-  </div>
-</header>
-<section class="section">
-  <div class="container" style="max-width: 760px;">
-    ${bodyHtml}
-  </div>
-</section>
-</body>
-</html>`;
+<header class="page-header"><div class="container">
+  ${cover}${scoreBlock}
+  <p style="font-family: var(--f-mono); font-size:0.85rem; color: var(--ink-dim);">
+    ${entry.author ? escapeHtml(entry.author) + ' · ' : ''}${new Date().toLocaleDateString('es-419', { year: 'numeric', month: 'long', day: 'numeric' })}
+  </p>
+</div></header>
+<section class="section"><div class="container" style="max-width: 760px;">${bodyHtml}</div></section>
+</body></html>`;
   }
 
   function openPreview(prefix) {
     const entry = prefix === 'r' ? {
-      title: document.getElementById('r-title').value,
-      game: document.getElementById('r-game').value,
-      score: document.getElementById('r-score').value,
-      cover: document.getElementById('r-cover').value,
-      body: document.getElementById('r-body').value,
-      author: authorName()
+      title: document.getElementById('r-title').value, game: document.getElementById('r-game').value,
+      score: document.getElementById('r-score').value, cover: document.getElementById('r-cover').value,
+      body: document.getElementById('r-body').value, author: authorName()
     } : {
-      title: document.getElementById('n-title').value,
-      body: document.getElementById('n-body').value,
-      cover: document.getElementById('n-cover').value,
-      author: authorName()
+      title: document.getElementById('n-title').value, body: document.getElementById('n-body').value,
+      cover: document.getElementById('n-cover').value, author: authorName()
     };
-
     const html = buildPreviewDoc(prefix === 'r' ? 'review' : 'noticia', entry);
-    const blob = new Blob([html], { type: 'text/html' });
-    window.open(URL.createObjectURL(blob), '_blank');
+    window.open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank');
   }
 
   // ---------- Tabs ----------
@@ -574,61 +615,177 @@
     document.getElementById('tab-noticias-btn').classList.toggle('active', name === 'noticias');
   }
 
-  // ---------- Reviews ----------
+  // ---------- Listado: cargar, ordenar, paginar, dibujar ----------
 
-  async function renderReviews() {
-    const list = document.getElementById('reviews-list');
-    list.innerHTML = '<p style="color:var(--ink-dim);"><span class="spinner"></span>Cargando…</p>';
+  async function loadList(p) {
+    const s = state[p];
+    const gridEl = document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-grid`);
+    gridEl.innerHTML = '<p style="color:var(--ink-dim);"><span class="spinner"></span>Cargando…</p>';
     try {
-      const { items } = await callFn({ action: 'list', path: 'content/reviews' });
-      if (!items.length) {
-        list.innerHTML = '<p style="color:var(--ink-dim);">Todavía no hay reviews.</p>';
-        return;
-      }
-      const rows = await Promise.all(items.map(async (it) => {
+      const { items } = await callFn({ action: 'list', path: s.folder });
+      s.data = await Promise.all(items.map(async (it) => {
         const { content } = await callFn({ action: 'get', path: it.path });
         return { slug: it.slug, ...content };
       }));
-      rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-
-      list.innerHTML = rows.map(r => `
-        <div class="entry-row">
-          <div>
-            <strong>${escapeHtml(r.title)}</strong>
-            <span class="badge ${r.draft ? 'badge-draft' : 'badge-live'}">${r.draft ? 'Borrador' : 'Publicada'}</span>
-            <div class="meta">${escapeHtml(r.game || '')} ${r.score != null ? '· ' + r.score + '/10' : ''} ${r.author ? '· ' + escapeHtml(r.author) : ''}</div>
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-ghost" onclick='editReview(${JSON.stringify(r.slug)})'>Editar</button>
-            <button class="btn btn-ghost" onclick='deleteReview(${JSON.stringify(r.slug)})'>Borrar</button>
-          </div>
-        </div>
-      `).join('');
+      s.page = 1;
+      renderList(p);
     } catch (e) {
-      list.innerHTML = `<div class="status-msg status-err">Error al cargar: ${e.message}</div>`;
+      gridEl.innerHTML = `<div class="status-msg status-err">Error al cargar: ${e.message}</div>`;
     }
   }
 
-  async function editReview(slug) {
-    try {
-      const { content } = await callFn({ action: 'get', path: `content/reviews/${slug}.json` });
-      editingReviewSlug = slug;
-      document.getElementById('r-title').value = content.title || '';
-      document.getElementById('r-game').value = content.game || '';
-      document.getElementById('r-slug').value = slug;
-      document.getElementById('r-score').value = content.score != null ? content.score : '';
-      document.getElementById('r-cover').value = content.cover || '';
-      document.getElementById('r-excerpt').value = content.excerpt || '';
-      document.getElementById('r-body').value = content.body || '';
-      document.getElementById('r-draft').checked = !!content.draft;
-      const prev = document.getElementById('r-cover-preview');
-      if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
-      document.getElementById('r-form-title').textContent = `Editando: ${content.title}`;
-      document.getElementById('r-cancel-btn').classList.remove('hidden');
-      document.getElementById('r-title').scrollIntoView({ behavior: 'smooth' });
-    } catch (e) {
-      showGlobalMsg('Error al abrir para editar: ' + e.message, false);
+  function sortedData(p) {
+    const s = state[p];
+    const data = s.data.slice();
+    if (s.sort === 'date-desc') data.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    else if (s.sort === 'date-asc') data.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    else if (s.sort === 'alpha-asc') data.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'es'));
+    else if (s.sort === 'alpha-desc') data.sort((a, b) => (b.title || '').localeCompare(a.title || '', 'es'));
+    return data;
+  }
+
+  function renderList(p) {
+    const s = state[p];
+    const gridEl = document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-grid`);
+    const pagEl = document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-pagination`);
+
+    if (!s.data.length) {
+      gridEl.innerHTML = `<div class="empty-hint">Todavía no hay ${p === 'r' ? 'reviews' : 'noticias'}. Usá el botón "+ Nueva" para cargar la primera.</div>`;
+      pagEl.innerHTML = '';
+      return;
     }
+
+    const data = sortedData(p);
+    const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+    if (s.page > totalPages) s.page = totalPages;
+    const pageItems = data.slice((s.page - 1) * PAGE_SIZE, s.page * PAGE_SIZE);
+
+    if (s.view === 'grid') {
+      gridEl.className = 'grid grid-3';
+      gridEl.innerHTML = pageItems.map(item => entryCardHtml(p, item)).join('');
+    } else {
+      gridEl.className = '';
+      gridEl.innerHTML = pageItems.map(item => entryRowHtml(p, item)).join('');
+    }
+
+    if (totalPages <= 1) {
+      pagEl.innerHTML = '';
+    } else {
+      let btns = `<button ${s.page === 1 ? 'disabled' : ''} onclick="goToPage('${p}', ${s.page - 1})">‹ Anterior</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        btns += `<button class="${i === s.page ? 'active' : ''}" onclick="goToPage('${p}', ${i})">${i}</button>`;
+      }
+      btns += `<button ${s.page === totalPages ? 'disabled' : ''} onclick="goToPage('${p}', ${s.page + 1})">Siguiente ›</button>`;
+      pagEl.innerHTML = btns;
+    }
+  }
+
+  function entryCardHtml(p, item) {
+    const cover = item.cover
+      ? `<img src="${toPreviewUrl(item.cover)}" alt="">`
+      : `<div class="no-cover">Sin portada</div>`;
+    const sub = p === 'r'
+      ? `${escapeHtml(item.game || '')} ${item.score != null ? '· ' + item.score + '/10' : ''}`
+      : (item.date ? new Date(item.date).toLocaleDateString('es-419') : '');
+    return `
+      <div class="card entry-card" onclick="openEdit('${p}', ${JSON.stringify(item.slug)})">
+        <button class="del-btn" onclick="event.stopPropagation(); deleteEntry('${p}', ${JSON.stringify(item.slug)})" title="Borrar">🗑</button>
+        ${cover}
+        <span class="badge ${item.draft ? 'badge-draft' : 'badge-live'}">${item.draft ? 'Borrador' : 'Publicada'}</span>
+        <h3 style="margin-top:10px;">${escapeHtml(item.title || '')}</h3>
+        <div class="meta">${sub}</div>
+      </div>`;
+  }
+
+  function entryRowHtml(p, item) {
+    const cover = item.cover ? `<img src="${toPreviewUrl(item.cover)}" alt="">` : `<div class="no-cover-sm"></div>`;
+    const sub = p === 'r'
+      ? `${escapeHtml(item.game || '')} ${item.score != null ? '· ' + item.score + '/10' : ''}`
+      : (item.date ? new Date(item.date).toLocaleDateString('es-419') : '');
+    return `
+      <div class="entry-row" onclick="openEdit('${p}', ${JSON.stringify(item.slug)})">
+        <div class="row-main">
+          ${cover}
+          <div>
+            <strong>${escapeHtml(item.title)}</strong>
+            <div class="meta">${sub}</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="badge ${item.draft ? 'badge-draft' : 'badge-live'}">${item.draft ? 'Borrador' : 'Publicada'}</span>
+          <button class="btn btn-ghost" onclick="event.stopPropagation(); deleteEntry('${p}', ${JSON.stringify(item.slug)})">Borrar</button>
+        </div>
+      </div>`;
+  }
+
+  function setView(p, view) {
+    state[p].view = view;
+    document.getElementById(`${p}-view-grid-btn`).classList.toggle('active', view === 'grid');
+    document.getElementById(`${p}-view-list-btn`).classList.toggle('active', view === 'list');
+    renderList(p);
+  }
+  function onSortChange(p) {
+    state[p].sort = document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-sort-select`).value;
+    state[p].page = 1;
+    renderList(p);
+  }
+  function goToPage(p, page) {
+    state[p].page = page;
+    renderList(p);
+    document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-list-view`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------- Cambiar entre vista de lista y vista de formulario ----------
+
+  function showListView(p) {
+    document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-list-view`).classList.remove('hidden');
+    document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-form-view`).classList.add('hidden');
+  }
+  function showFormView(p) {
+    document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-list-view`).classList.add('hidden');
+    document.getElementById(`${p === 'r' ? 'reviews' : 'noticias'}-form-view`).classList.remove('hidden');
+  }
+  function backToList(p) { showListView(p); }
+
+  function startNew(p) {
+    if (p === 'r') resetReviewForm(); else resetNoticiaForm();
+    showFormView(p);
+  }
+
+  function openEdit(p, slug) {
+    if (p === 'r') editReview(slug); else editNoticia(slug);
+    showFormView(p);
+  }
+
+  async function deleteEntry(p, slug) {
+    if (!confirm('¿Borrar esta nota?')) return;
+    const folder = state[p].folder;
+    try {
+      await callFn({ action: 'delete', path: `${folder}/${slug}.json`, message: `Borrar: ${slug}` });
+      showGlobalMsg('Borrada.', true);
+      await loadList(p);
+    } catch (e) {
+      showGlobalMsg('Error al borrar: ' + e.message, false);
+    }
+  }
+
+  // ---------- Reviews: formulario ----------
+
+  function editReview(slug) {
+    const content = state.r.data.find(x => x.slug === slug);
+    if (!content) return;
+    editingReviewSlug = slug;
+    document.getElementById('r-title').value = content.title || '';
+    document.getElementById('r-game').value = content.game || '';
+    document.getElementById('r-slug').value = slug;
+    document.getElementById('r-score').value = content.score != null ? content.score : '';
+    document.getElementById('r-cover').value = content.cover || '';
+    document.getElementById('r-excerpt').value = content.excerpt || '';
+    document.getElementById('r-body').value = content.body || '';
+    document.getElementById('r-draft').checked = !!content.draft;
+    const prev = document.getElementById('r-cover-preview');
+    if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+    document.getElementById('r-form-title').textContent = `Editando: ${content.title}`;
   }
 
   function resetReviewForm() {
@@ -637,7 +794,6 @@
     document.getElementById('r-draft').checked = false;
     document.getElementById('r-cover-preview').style.display = 'none';
     document.getElementById('r-form-title').textContent = 'Agregar nueva review';
-    document.getElementById('r-cancel-btn').classList.add('hidden');
   }
 
   async function saveReview() {
@@ -646,108 +802,55 @@
     if (!title || !slug) { showGlobalMsg('Falta el título.', false); return; }
 
     const entry = {
-      title,
-      game: document.getElementById('r-game').value.trim(),
+      title, game: document.getElementById('r-game').value.trim(),
       score: document.getElementById('r-score').value !== '' ? parseFloat(document.getElementById('r-score').value) : null,
       cover: document.getElementById('r-cover').value.trim() || null,
       excerpt: document.getElementById('r-excerpt').value.trim(),
       body: document.getElementById('r-body').value.trim(),
-      author: authorName(),
-      date: new Date().toISOString(),
+      author: authorName(), date: new Date().toISOString(),
       draft: document.getElementById('r-draft').checked
     };
 
     const btn = document.getElementById('r-save-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Guardando…';
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando…';
 
     try {
       const isEditing = !!editingReviewSlug;
       if (isEditing) {
-        const existing = await callFn({ action: 'get', path: `content/reviews/${slug}.json` }).catch(() => null);
-        if (existing && existing.content && existing.content.date) entry.date = existing.content.date;
+        const existing = state.r.data.find(x => x.slug === slug);
+        if (existing && existing.date) entry.date = existing.date;
       }
       await callFn({
-        action: 'put',
-        path: `content/reviews/${slug}.json`,
+        action: 'put', path: `content/reviews/${slug}.json`,
         content: JSON.stringify(entry, null, 2),
         message: `${isEditing ? 'Editar' : 'Nueva'} review: ${title}`
       });
       showGlobalMsg('Guardado. El sitio se actualiza en un rato corto.', true);
       resetReviewForm();
-      renderReviews();
+      await loadList('r');
+      showListView('r');
     } catch (e) {
       showGlobalMsg('Error al guardar: ' + e.message, false);
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Guardar';
+      btn.disabled = false; btn.textContent = 'Guardar';
     }
   }
 
-  async function deleteReview(slug) {
-    if (!confirm('¿Borrar esta review?')) return;
-    try {
-      await callFn({ action: 'delete', path: `content/reviews/${slug}.json`, message: `Borrar review: ${slug}` });
-      showGlobalMsg('Borrada.', true);
-      renderReviews();
-    } catch (e) {
-      showGlobalMsg('Error al borrar: ' + e.message, false);
-    }
-  }
+  // ---------- Noticias: formulario ----------
 
-  // ---------- Noticias ----------
-
-  async function renderNoticias() {
-    const list = document.getElementById('noticias-list');
-    list.innerHTML = '<p style="color:var(--ink-dim);"><span class="spinner"></span>Cargando…</p>';
-    try {
-      const { items } = await callFn({ action: 'list', path: 'content/noticias' });
-      if (!items.length) {
-        list.innerHTML = '<p style="color:var(--ink-dim);">Todavía no hay noticias.</p>';
-        return;
-      }
-      const rows = await Promise.all(items.map(async (it) => {
-        const { content } = await callFn({ action: 'get', path: it.path });
-        return { slug: it.slug, ...content };
-      }));
-      rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-
-      list.innerHTML = rows.map(n => `
-        <div class="entry-row">
-          <div>
-            <strong>${escapeHtml(n.title)}</strong>
-            <span class="badge ${n.draft ? 'badge-draft' : 'badge-live'}">${n.draft ? 'Borrador' : 'Publicada'}</span>
-            <div class="meta">${n.date ? new Date(n.date).toLocaleDateString('es-419') : ''} ${n.author ? '· ' + escapeHtml(n.author) : ''}</div>
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-ghost" onclick='editNoticia(${JSON.stringify(n.slug)})'>Editar</button>
-            <button class="btn btn-ghost" onclick='deleteNoticia(${JSON.stringify(n.slug)})'>Borrar</button>
-          </div>
-        </div>
-      `).join('');
-    } catch (e) {
-      list.innerHTML = `<div class="status-msg status-err">Error al cargar: ${e.message}</div>`;
-    }
-  }
-
-  async function editNoticia(slug) {
-    try {
-      const { content } = await callFn({ action: 'get', path: `content/noticias/${slug}.json` });
-      editingNoticiaSlug = slug;
-      document.getElementById('n-title').value = content.title || '';
-      document.getElementById('n-slug').value = slug;
-      document.getElementById('n-cover').value = content.cover || '';
-      document.getElementById('n-excerpt').value = content.excerpt || '';
-      document.getElementById('n-body').value = content.body || '';
-      document.getElementById('n-draft').checked = !!content.draft;
-      const prev = document.getElementById('n-cover-preview');
-      if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
-      document.getElementById('n-form-title').textContent = `Editando: ${content.title}`;
-      document.getElementById('n-cancel-btn').classList.remove('hidden');
-      document.getElementById('n-title').scrollIntoView({ behavior: 'smooth' });
-    } catch (e) {
-      showGlobalMsg('Error al abrir para editar: ' + e.message, false);
-    }
+  function editNoticia(slug) {
+    const content = state.n.data.find(x => x.slug === slug);
+    if (!content) return;
+    editingNoticiaSlug = slug;
+    document.getElementById('n-title').value = content.title || '';
+    document.getElementById('n-slug').value = slug;
+    document.getElementById('n-cover').value = content.cover || '';
+    document.getElementById('n-excerpt').value = content.excerpt || '';
+    document.getElementById('n-body').value = content.body || '';
+    document.getElementById('n-draft').checked = !!content.draft;
+    const prev = document.getElementById('n-cover-preview');
+    if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+    document.getElementById('n-form-title').textContent = `Editando: ${content.title}`;
   }
 
   function resetNoticiaForm() {
@@ -756,7 +859,6 @@
     document.getElementById('n-draft').checked = false;
     document.getElementById('n-cover-preview').style.display = 'none';
     document.getElementById('n-form-title').textContent = 'Agregar nueva noticia';
-    document.getElementById('n-cancel-btn').classList.add('hidden');
   }
 
   async function saveNoticia() {
@@ -765,50 +867,35 @@
     if (!title || !slug) { showGlobalMsg('Falta el título.', false); return; }
 
     const entry = {
-      title,
-      cover: document.getElementById('n-cover').value.trim() || null,
+      title, cover: document.getElementById('n-cover').value.trim() || null,
       excerpt: document.getElementById('n-excerpt').value.trim(),
       body: document.getElementById('n-body').value.trim(),
-      author: authorName(),
-      date: new Date().toISOString(),
+      author: authorName(), date: new Date().toISOString(),
       draft: document.getElementById('n-draft').checked
     };
 
     const btn = document.getElementById('n-save-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Guardando…';
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando…';
 
     try {
       const isEditing = !!editingNoticiaSlug;
       if (isEditing) {
-        const existing = await callFn({ action: 'get', path: `content/noticias/${slug}.json` }).catch(() => null);
-        if (existing && existing.content && existing.content.date) entry.date = existing.content.date;
+        const existing = state.n.data.find(x => x.slug === slug);
+        if (existing && existing.date) entry.date = existing.date;
       }
       await callFn({
-        action: 'put',
-        path: `content/noticias/${slug}.json`,
+        action: 'put', path: `content/noticias/${slug}.json`,
         content: JSON.stringify(entry, null, 2),
         message: `${isEditing ? 'Editar' : 'Nueva'} noticia: ${title}`
       });
       showGlobalMsg('Guardado. El sitio se actualiza en un rato corto.', true);
       resetNoticiaForm();
-      renderNoticias();
+      await loadList('n');
+      showListView('n');
     } catch (e) {
       showGlobalMsg('Error al guardar: ' + e.message, false);
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Guardar';
-    }
-  }
-
-  async function deleteNoticia(slug) {
-    if (!confirm('¿Borrar esta noticia?')) return;
-    try {
-      await callFn({ action: 'delete', path: `content/noticias/${slug}.json`, message: `Borrar noticia: ${slug}` });
-      showGlobalMsg('Borrada.', true);
-      renderNoticias();
-    } catch (e) {
-      showGlobalMsg('Error al borrar: ' + e.message, false);
+      btn.disabled = false; btn.textContent = 'Guardar';
     }
   }
 </script>
