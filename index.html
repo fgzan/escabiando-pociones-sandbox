@@ -98,6 +98,11 @@
   }
   .mode-tab.active { color: var(--cyan-bright); background: var(--bg-elevated); }
 
+  .editor-toolbar-sticky {
+    position: sticky; top: 62px; z-index: 15; background: var(--bg);
+    padding: 10px 0 6px; margin-bottom: -2px;
+  }
+
   .visual-editor {
     width:100%; min-height: 260px; background: var(--bg-elevated); border:1px solid var(--line);
     border-radius: var(--radius); color: var(--ink); padding:14px 16px; font-family: var(--f-body);
@@ -249,17 +254,19 @@
 
           <div class="field">
             <label>Texto completo</label>
-            <div class="mode-tabs">
-              <button type="button" class="mode-tab active" id="r-mode-md-btn" onclick="setEditorMode('r','markdown')">Markdown</button>
-              <button type="button" class="mode-tab" id="r-mode-visual-btn" onclick="setEditorMode('r','visual')">Vista con formato</button>
-            </div>
-            <div class="toolbar">
-              <button type="button" onmousedown="event.preventDefault()" onclick="doBold('r')">Negrita</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="doItalic('r')">Cursiva</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="doHeading('r')">Subtítulo</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="doLink('r')">🔗 Link</button>
-              <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInlineImage('r', this.files[0])">
-              <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
+            <div class="editor-toolbar-sticky">
+              <div class="mode-tabs">
+                <button type="button" class="mode-tab active" id="r-mode-md-btn" onclick="setEditorMode('r','markdown')">Markdown</button>
+                <button type="button" class="mode-tab" id="r-mode-visual-btn" onclick="setEditorMode('r','visual')">Vista con formato</button>
+              </div>
+              <div class="toolbar">
+                <button type="button" onmousedown="event.preventDefault()" onclick="doBold('r')">Negrita</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="doItalic('r')">Cursiva</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="doHeading('r')">Subtítulo</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="doLink('r')">🔗 Link</button>
+                <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInlineImage('r', this.files[0])">
+                <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
+              </div>
             </div>
             <textarea id="r-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
             <div id="r-body-visual" class="visual-editor hidden" contenteditable="true"></div>
@@ -329,17 +336,19 @@
 
           <div class="field">
             <label>Texto completo</label>
-            <div class="mode-tabs">
-              <button type="button" class="mode-tab active" id="n-mode-md-btn" onclick="setEditorMode('n','markdown')">Markdown</button>
-              <button type="button" class="mode-tab" id="n-mode-visual-btn" onclick="setEditorMode('n','visual')">Vista con formato</button>
-            </div>
-            <div class="toolbar">
-              <button type="button" onmousedown="event.preventDefault()" onclick="doBold('n')">Negrita</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="doItalic('n')">Cursiva</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="doHeading('n')">Subtítulo</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="doLink('n')">🔗 Link</button>
-              <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInlineImage('n', this.files[0])">
-              <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
+            <div class="editor-toolbar-sticky">
+              <div class="mode-tabs">
+                <button type="button" class="mode-tab active" id="n-mode-md-btn" onclick="setEditorMode('n','markdown')">Markdown</button>
+                <button type="button" class="mode-tab" id="n-mode-visual-btn" onclick="setEditorMode('n','visual')">Vista con formato</button>
+              </div>
+              <div class="toolbar">
+                <button type="button" onmousedown="event.preventDefault()" onclick="doBold('n')">Negrita</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="doItalic('n')">Cursiva</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="doHeading('n')">Subtítulo</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="doLink('n')">🔗 Link</button>
+                <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInlineImage('n', this.files[0])">
+                <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
+              </div>
             </div>
             <textarea id="n-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
             <div id="n-body-visual" class="visual-editor hidden" contenteditable="true"></div>
