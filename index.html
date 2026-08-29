@@ -100,7 +100,8 @@
 
   .editor-toolbar-sticky {
     position: sticky; top: 62px; z-index: 15; background: var(--bg);
-    padding: 10px 0 6px; margin-bottom: -2px;
+    padding: 10px 0 14px; margin-bottom: 2px;
+    box-shadow: 0 6px 8px -6px rgba(0,0,0,0.5);
   }
 
   .visual-editor {
@@ -734,6 +735,12 @@
       (m, url) => `<div class="card" style="margin:20px 0;"><span class="eyebrow">▶ Video de YouTube</span><p style="margin:0 0 10px;">Acá se va a incrustar el video una vez publicado (no se puede previsualizar embebido en esta pestaña de prueba).</p><a class="btn btn-ghost" href="${url}" target="_blank" rel="noopener">Ver en YouTube →</a></div>`
     );
   }
+  function tweetCardPreview(html) {
+    return html.replace(
+      /<p>\s*<a[^>]*href="(https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[A-Za-z0-9_]+\/status\/\d+)[^"]*"[^>]*>[^<]*<\/a>\s*<\/p>/g,
+      (m, url) => `<div class="card" style="margin:20px 0;"><span class="eyebrow">🐦 Post de X</span><p style="margin:0 0 10px;">Acá se va a incrustar el post una vez publicado (no se puede previsualizar embebido en esta pestaña de prueba).</p><a class="btn btn-ghost" href="${url}" target="_blank" rel="noopener">Ver en X →</a></div>`
+    );
+  }
   function openLinksNewTabPreview(html) {
     return html.replace(/<a (?![^>]*target=)/g, '<a target="_blank" rel="noopener" ');
   }
@@ -741,6 +748,7 @@
   function buildPreviewDoc(kind, entry) {
     let bodyHtml = marked.parse(absolutizeImages(entry.body || ''));
     bodyHtml = youtubeCardPreview(bodyHtml);
+    bodyHtml = tweetCardPreview(bodyHtml);
     bodyHtml = openLinksNewTabPreview(bodyHtml);
     const cover = entry.cover ? `<img src="${toPreviewUrl(entry.cover)}" alt="" style="width:100%; border-radius:6px; margin-bottom:20px;">` : '';
     const scoreBlock = kind === 'review' ? `
