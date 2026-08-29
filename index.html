@@ -91,6 +91,24 @@
   }
   .toolbar button:hover { color: var(--cyan-bright); border-color: var(--cyan-bright); }
 
+  .mode-tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .mode-tab {
+    font-family: var(--f-mono); font-size:0.75rem; padding:6px 14px; border-radius: var(--radius) var(--radius) 0 0;
+    border:1px solid var(--line); border-bottom:none; background: var(--bg); color: var(--ink-dim); cursor:pointer;
+  }
+  .mode-tab.active { color: var(--cyan-bright); background: var(--bg-elevated); }
+
+  .visual-editor {
+    width:100%; min-height: 260px; background: var(--bg-elevated); border:1px solid var(--line);
+    border-radius: var(--radius); color: var(--ink); padding:14px 16px; font-family: var(--f-body);
+    font-size:0.95rem; line-height:1.6; overflow-y:auto;
+  }
+  .visual-editor:focus { outline:none; border-color: var(--cyan-bright); }
+  .visual-editor img { max-width:100%; border-radius:6px; margin:8px 0; }
+  .visual-editor h2, .visual-editor h3 { margin: 0.6em 0 0.3em; }
+  .visual-editor p { margin: 0 0 0.8em; }
+  .visual-editor a { color: var(--cyan-bright); }
+
   .dropzone {
     border: 1px dashed var(--line); border-radius: var(--radius); padding: 18px;
     text-align: center; cursor: pointer; background: var(--bg-elevated); margin-bottom: 8px;
@@ -230,16 +248,21 @@
           <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="r-excerpt" style="min-height:80px;"></textarea></div>
 
           <div class="field">
-            <label>Texto completo (admite markdown)</label>
+            <label>Texto completo</label>
+            <div class="mode-tabs">
+              <button type="button" class="mode-tab active" id="r-mode-md-btn" onclick="setEditorMode('r','markdown')">Markdown</button>
+              <button type="button" class="mode-tab" id="r-mode-visual-btn" onclick="setEditorMode('r','visual')">Vista con formato</button>
+            </div>
             <div class="toolbar">
-              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('r-body','**','**')">Negrita</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('r-body','_','_')">Cursiva</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="insertText('r-body','\n## ')">Subtítulo</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="insertLink('r-body')">🔗 Link</button>
-              <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('r-body', this.files[0])">
+              <button type="button" onmousedown="event.preventDefault()" onclick="doBold('r')">Negrita</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="doItalic('r')">Cursiva</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="doHeading('r')">Subtítulo</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="doLink('r')">🔗 Link</button>
+              <input type="file" id="r-inline-img" accept="image/*" style="display:none;" onchange="uploadInlineImage('r', this.files[0])">
               <button type="button" onclick="document.getElementById('r-inline-img').click()">🖼 Insertar imagen</button>
             </div>
             <textarea id="r-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
+            <div id="r-body-visual" class="visual-editor hidden" contenteditable="true"></div>
           </div>
 
           <div class="btn-row" style="margin-bottom:20px;">
@@ -305,16 +328,21 @@
           <div class="field"><label>Resumen corto (aparece en la tarjeta)</label><textarea id="n-excerpt" style="min-height:80px;"></textarea></div>
 
           <div class="field">
-            <label>Texto completo (admite markdown)</label>
+            <label>Texto completo</label>
+            <div class="mode-tabs">
+              <button type="button" class="mode-tab active" id="n-mode-md-btn" onclick="setEditorMode('n','markdown')">Markdown</button>
+              <button type="button" class="mode-tab" id="n-mode-visual-btn" onclick="setEditorMode('n','visual')">Vista con formato</button>
+            </div>
             <div class="toolbar">
-              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('n-body','**','**')">Negrita</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="wrapSelection('n-body','_','_')">Cursiva</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="insertText('n-body','\n## ')">Subtítulo</button>
-              <button type="button" onmousedown="event.preventDefault()" onclick="insertLink('n-body')">🔗 Link</button>
-              <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInline('n-body', this.files[0])">
+              <button type="button" onmousedown="event.preventDefault()" onclick="doBold('n')">Negrita</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="doItalic('n')">Cursiva</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="doHeading('n')">Subtítulo</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="doLink('n')">🔗 Link</button>
+              <input type="file" id="n-inline-img" accept="image/*" style="display:none;" onchange="uploadInlineImage('n', this.files[0])">
               <button type="button" onclick="document.getElementById('n-inline-img').click()">🖼 Insertar imagen</button>
             </div>
             <textarea id="n-body" placeholder="También podés pegar una imagen acá directo con Ctrl+V."></textarea>
+            <div id="n-body-visual" class="visual-editor hidden" contenteditable="true"></div>
           </div>
 
           <div class="btn-row" style="margin-bottom:20px;">
@@ -337,6 +365,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://unpkg.com/turndown@7.1.2/dist/turndown.js"></script>
 <script>
   const SUPABASE_URL = "https://mmhzgamixbnawbjhmagt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
@@ -519,33 +548,150 @@
     }
   }
 
-  async function uploadInline(textareaId, file) {
+  // ---------- Editor dual: markdown en crudo vs. "vista con formato" ----------
+
+  const editorMode = { r: 'markdown', n: 'markdown' };
+  const turndownService = new TurndownService({ headingStyle: 'atx' });
+  // Al convertir de vuelta a markdown, usa la ruta real guardada en
+  // data-real-src (no la URL local de vista previa) para las imágenes.
+  turndownService.addRule('realImageSrc', {
+    filter: 'img',
+    replacement: (content, node) => {
+      const alt = node.getAttribute('alt') || '';
+      const src = node.getAttribute('data-real-src') || node.getAttribute('src') || '';
+      return `![${alt}](${src})`;
+    }
+  });
+
+  function markdownToVisualHtml(markdown) {
+    let html = marked.parse(markdown || '');
+    // Muestra la imagen real (o la local recién subida) pero guarda la
+    // ruta original en data-real-src, para poder reconstruir bien el
+    // markdown cuando se vuelva a ese modo.
+    html = html.replace(/<img src="([^"]*)"([^>]*)>/g, (m, src, rest) => {
+      const display = toPreviewUrl(src);
+      return `<img src="${display}" data-real-src="${src}"${rest}>`;
+    });
+    return html;
+  }
+
+  function setEditorMode(prefix, mode) {
+    if (editorMode[prefix] === mode) return;
+    const ta = document.getElementById(`${prefix}-body`);
+    const visual = document.getElementById(`${prefix}-body-visual`);
+
+    if (mode === 'visual') {
+      visual.innerHTML = markdownToVisualHtml(ta.value);
+      ta.classList.add('hidden');
+      visual.classList.remove('hidden');
+    } else {
+      ta.value = turndownService.turndown(visual.innerHTML).trim();
+      visual.classList.add('hidden');
+      ta.classList.remove('hidden');
+    }
+    editorMode[prefix] = mode;
+    document.getElementById(`${prefix}-mode-md-btn`).classList.toggle('active', mode === 'markdown');
+    document.getElementById(`${prefix}-mode-visual-btn`).classList.toggle('active', mode === 'visual');
+  }
+
+  // Antes de guardar, previsualizar, o cualquier otra cosa que lea el
+  // markdown final, hay que asegurarse de que si el modo visual está
+  // activo, sus cambios ya se hayan volcado al textarea.
+  function syncEditorToMarkdown(prefix) {
+    if (editorMode[prefix] === 'visual') {
+      const ta = document.getElementById(`${prefix}-body`);
+      const visual = document.getElementById(`${prefix}-body-visual`);
+      ta.value = turndownService.turndown(visual.innerHTML).trim();
+    }
+  }
+
+  function resetEditorMode(prefix) {
+    editorMode[prefix] = 'markdown';
+    document.getElementById(`${prefix}-body`).classList.remove('hidden');
+    document.getElementById(`${prefix}-body-visual`).classList.add('hidden');
+    document.getElementById(`${prefix}-body-visual`).innerHTML = '';
+    document.getElementById(`${prefix}-mode-md-btn`).classList.add('active');
+    document.getElementById(`${prefix}-mode-visual-btn`).classList.remove('active');
+  }
+
+  // Botones de la barra: hacen una cosa u otra según el modo activo.
+  function doBold(prefix) {
+    if (editorMode[prefix] === 'visual') {
+      document.getElementById(`${prefix}-body-visual`).focus();
+      document.execCommand('bold');
+    } else {
+      wrapSelection(`${prefix}-body`, '**', '**');
+    }
+  }
+  function doItalic(prefix) {
+    if (editorMode[prefix] === 'visual') {
+      document.getElementById(`${prefix}-body-visual`).focus();
+      document.execCommand('italic');
+    } else {
+      wrapSelection(`${prefix}-body`, '_', '_');
+    }
+  }
+  function doHeading(prefix) {
+    if (editorMode[prefix] === 'visual') {
+      document.getElementById(`${prefix}-body-visual`).focus();
+      document.execCommand('formatBlock', false, 'H2');
+    } else {
+      insertText(`${prefix}-body`, '\n## ');
+    }
+  }
+  function doLink(prefix) {
+    if (editorMode[prefix] === 'visual') {
+      const url = prompt('¿A dónde tiene que llevar el link?', 'https://');
+      if (!url) return;
+      const visual = document.getElementById(`${prefix}-body-visual`);
+      visual.focus();
+      if (window.getSelection().toString().trim() === '') {
+        document.execCommand('insertHTML', false, `<a href="${url}">texto del link</a>`);
+      } else {
+        document.execCommand('createLink', false, url);
+      }
+    } else {
+      insertLink(`${prefix}-body`);
+    }
+  }
+
+  async function uploadInlineImage(prefix, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(file);
       const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'imagen')}${extOf(file.name)}`;
-      localImageCache[path] = URL.createObjectURL(file);
+      const localUrl = URL.createObjectURL(file);
+      localImageCache[path] = localUrl;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${path}` });
-      insertText(textareaId, `\n![](${path})\n`);
+
+      if (editorMode[prefix] === 'visual') {
+        const visual = document.getElementById(`${prefix}-body-visual`);
+        visual.focus();
+        document.execCommand('insertHTML', false, `<img src="${localUrl}" data-real-src="${path}">`);
+      } else {
+        insertText(`${prefix}-body`, `\n![](${path})\n`);
+      }
       showGlobalMsg('Imagen subida e insertada en el texto.', true);
     } catch (e) {
       showGlobalMsg('Error al subir la imagen: ' + e.message, false);
     }
   }
 
-  function attachPasteUpload(textareaId) {
-    document.getElementById(textareaId).addEventListener('paste', (e) => {
+  function attachPasteUpload(elId, prefix) {
+    document.getElementById(elId).addEventListener('paste', (e) => {
       const items = e.clipboardData && e.clipboardData.items;
       if (!items) return;
       for (const item of items) {
-        if (item.type.startsWith('image/')) { e.preventDefault(); uploadInline(textareaId, item.getAsFile()); return; }
+        if (item.type.startsWith('image/')) { e.preventDefault(); uploadInlineImage(prefix, item.getAsFile()); return; }
       }
     });
   }
-  attachPasteUpload('r-body');
-  attachPasteUpload('n-body');
+  attachPasteUpload('r-body', 'r');
+  attachPasteUpload('r-body-visual', 'r');
+  attachPasteUpload('n-body', 'n');
+  attachPasteUpload('n-body-visual', 'n');
 
   function attachPasteCover(dropzoneId, prefix) {
     const el = document.getElementById(dropzoneId);
@@ -614,6 +760,7 @@
   }
 
   function openPreview(prefix) {
+    syncEditorToMarkdown(prefix);
     const entry = prefix === 'r' ? {
       title: document.getElementById('r-title').value, game: document.getElementById('r-game').value,
       score: document.getElementById('r-score').value, cover: document.getElementById('r-cover').value,
@@ -798,6 +945,7 @@
     const content = state.r.data.find(x => x.slug === slug);
     if (!content) return;
     editingReviewSlug = slug;
+    resetEditorMode('r');
     document.getElementById('r-title').value = content.title || '';
     document.getElementById('r-game').value = content.game || '';
     document.getElementById('r-slug').value = slug;
@@ -817,9 +965,11 @@
     document.getElementById('r-draft').checked = false;
     document.getElementById('r-cover-preview').style.display = 'none';
     document.getElementById('r-form-title').textContent = 'Agregar nueva review';
+    resetEditorMode('r');
   }
 
   async function saveReview() {
+    syncEditorToMarkdown('r');
     const title = document.getElementById('r-title').value.trim();
     const slug = document.getElementById('r-slug').value.trim() || slugify(title);
     if (!title || !slug) { showGlobalMsg('Falta el título.', false); return; }
@@ -865,6 +1015,7 @@
     const content = state.n.data.find(x => x.slug === slug);
     if (!content) return;
     editingNoticiaSlug = slug;
+    resetEditorMode('n');
     document.getElementById('n-title').value = content.title || '';
     document.getElementById('n-slug').value = slug;
     document.getElementById('n-cover').value = content.cover || '';
@@ -882,9 +1033,11 @@
     document.getElementById('n-draft').checked = false;
     document.getElementById('n-cover-preview').style.display = 'none';
     document.getElementById('n-form-title').textContent = 'Agregar nueva noticia';
+    resetEditorMode('n');
   }
 
   async function saveNoticia() {
+    syncEditorToMarkdown('n');
     const title = document.getElementById('n-title').value.trim();
     const slug = document.getElementById('n-slug').value.trim() || slugify(title);
     if (!title || !slug) { showGlobalMsg('Falta el título.', false); return; }
