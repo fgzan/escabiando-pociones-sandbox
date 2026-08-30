@@ -180,8 +180,8 @@
         <button class="btn btn-ghost" onclick="toggleSettings()" title="Configuración">⚙</button>
         <button class="btn btn-ghost" onclick="logout()">Cerrar sesión</button>
 
-        <!-- ---------- Panel desplegable: apodo del usuario ---------- -->
-        <div id="settings-dropdown" class="card hidden" style="position:absolute; top:calc(100% + 10px); right:0; width:320px; z-index:20;">
+        <!-- ---------- Panel desplegable: apodo y contraseña ---------- -->
+        <div id="settings-dropdown" class="card hidden" style="position:absolute; top:calc(100% + 10px); right:0; width:320px; z-index:20; max-height:80vh; overflow-y:auto;">
           <h3 class="mt-0">Tu apodo</h3>
           <p style="margin-bottom:14px;">Así vas a firmar las reviews y noticias que publiques — nunca tu mail.</p>
           <div class="field">
@@ -189,6 +189,19 @@
           </div>
           <button class="btn btn-primary" onclick="saveNickname()" style="width:100%; justify-content:center;">Guardar apodo</button>
           <div id="nickname-msg"></div>
+
+          <h3 style="margin-top:24px; padding-top:20px; border-top:1px solid var(--line);">Tu contraseña</h3>
+          <p style="margin-bottom:14px;">Si entraste con un link de invitación, todavía no tenés una puesta — poné una acá para poder loguearte sola/o la próxima vez.</p>
+          <div class="field">
+            <label style="font-family:var(--f-mono); font-size:0.75rem; color:var(--ink-dim);">Contraseña nueva</label>
+            <input type="password" id="new-password-input" autocomplete="new-password">
+          </div>
+          <div class="field">
+            <label style="font-family:var(--f-mono); font-size:0.75rem; color:var(--ink-dim);">Repetila</label>
+            <input type="password" id="new-password-confirm" autocomplete="new-password">
+          </div>
+          <button class="btn btn-primary" onclick="changePassword()" style="width:100%; justify-content:center;">Guardar contraseña</button>
+          <div id="password-msg"></div>
         </div>
       </div>
     </div>
@@ -453,6 +466,27 @@
     if (error) { msg.innerHTML = `<div class="status-msg status-err">Error: ${error.message}</div>`; return; }
     currentNickname = nickname;
     msg.innerHTML = '<div class="status-msg status-ok">Apodo guardado. A partir de ahora firma así.</div>';
+  }
+
+  async function changePassword() {
+    const pass = document.getElementById('new-password-input').value;
+    const confirm = document.getElementById('new-password-confirm').value;
+    const msg = document.getElementById('password-msg');
+
+    if (!pass || pass.length < 6) {
+      msg.innerHTML = '<div class="status-msg status-err">La contraseña tiene que tener al menos 6 caracteres.</div>';
+      return;
+    }
+    if (pass !== confirm) {
+      msg.innerHTML = '<div class="status-msg status-err">Las dos contraseñas no coinciden.</div>';
+      return;
+    }
+
+    const { error } = await sb.auth.updateUser({ password: pass });
+    if (error) { msg.innerHTML = `<div class="status-msg status-err">Error: ${error.message}</div>`; return; }
+    document.getElementById('new-password-input').value = '';
+    document.getElementById('new-password-confirm').value = '';
+    msg.innerHTML = '<div class="status-msg status-ok">Contraseña guardada. Usala la próxima vez que entres.</div>';
   }
 
   function authorName() { return currentNickname || (currentUser ? currentUser.email : ''); }
