@@ -626,13 +626,32 @@
 
   function confirmCrop() {
     if (!cropperInstance) return;
-    // maxWidth/maxHeight achica sola cualquier foto gigante de celular,
-    // sin que nadie tenga que pensar en el tamaño del archivo.
-    cropperInstance.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600, imageSmoothingQuality: 'high' }).toBlob((blob) => {
-      const cb = cropCallback;
-      closeImageEditor();
-      if (cb) cb(blob);
-    }, 'image/png');
+    // maxWidth/maxHeight achica sola cualquier foto gigante de celular.
+    const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600, imageSmoothingQuality: 'high' });
+
+    // WebP con calidad 0.82: mismo aspecto visual que un PNG, una
+    // fracción del peso (es la misma técnica que usan los sitios de
+    // "comprimir imagen"). Si el navegador fuera muy viejo y no
+    // soportara exportar a WebP, cae solo a JPEG comprimido en vez de
+    // a un PNG pesado sin comprimir.
+    canvas.toBlob((blob) => {
+      const finish = (finalBlob) => {
+        const cb = cropCallback;
+        closeImageEditor();
+        if (cb) cb(finalBlob);
+      };
+      if (blob && blob.type === 'image/webp') {
+        finish(blob);
+      } else {
+        canvas.toBlob((jpegBlob) => finish(jpegBlob), 'image/jpeg', 0.85);
+      }
+    }, 'image/webp', 0.82);
+  }
+
+  function extFromBlob(blob) {
+    if (blob.type === 'image/webp') return '.webp';
+    if (blob.type === 'image/jpeg') return '.jpg';
+    return '.png';
   }
 
   function cancelCrop() { closeImageEditor(); }
@@ -660,7 +679,7 @@
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(blob);
-      const path = `assets/uploads/${Date.now()}-portada.png`;
+      const path = `assets/uploads/${Date.now()}-portada${extFromBlob(blob)}`;
       localImageCache[path] = localUrl;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${path}` });
       document.getElementById(`${prefix}-cover`).value = path;
@@ -787,7 +806,7 @@
     try {
       showGlobalMsg('Subiendo imagen…', true);
       const base64 = await fileToBase64(blob);
-      const path = `assets/uploads/${Date.now()}-imagen.png`;
+      const path = `assets/uploads/${Date.now()}-imagen${extFromBlob(blob)}`;
       const localUrl = URL.createObjectURL(blob);
       localImageCache[path] = localUrl;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${path}` });
