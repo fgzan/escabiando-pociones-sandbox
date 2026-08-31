@@ -6,6 +6,7 @@
 <title>Administración de contenido — Escabiando Pociones</title>
 <link rel="icon" href="assets/logo-full.png">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
   .field { margin-bottom: 16px; }
   .field label { display:block; font-family: var(--f-mono); font-size:0.8rem; color: var(--ink-dim); margin-bottom:6px; }
@@ -386,9 +387,32 @@
   </section>
 </div>
 
+<!-- ===================== MODAL: editor de imágenes ===================== -->
+<div id="image-editor-modal" class="hidden" style="position:fixed; inset:0; background:rgba(10,12,25,0.92); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div class="card" style="width:100%; max-width:640px; max-height:90vh; display:flex; flex-direction:column;">
+    <h3 class="mt-0">Ajustar imagen</h3>
+    <div style="flex:1; min-height:0; max-height:55vh; background:var(--bg); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;">
+      <img id="image-editor-img" style="display:block; max-width:100%;">
+    </div>
+    <div class="toolbar" style="margin-bottom:16px;">
+      <button type="button" onclick="cropperInstance && cropperInstance.rotate(-90)">↺ Rotar</button>
+      <button type="button" onclick="cropperInstance && cropperInstance.rotate(90)">↻ Rotar</button>
+      <button type="button" onclick="setCropAspect(null)">Libre</button>
+      <button type="button" onclick="setCropAspect(1)">1:1</button>
+      <button type="button" onclick="setCropAspect(16/9)">16:9</button>
+      <button type="button" onclick="cropperInstance && cropperInstance.reset()">Reiniciar</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="confirmCrop()">Usar esta imagen</button>
+      <button class="btn btn-ghost" onclick="cancelCrop()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="https://unpkg.com/turndown@7.1.2/dist/turndown.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
   const SUPABASE_URL = "https://mmhzgamixbnawbjhmagt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1taHpnYW1peGJuYXdiamhtYWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODMyOTUsImV4cCI6MjEwMzM1OTI5NX0.sSxZWLnwAG3yzGrsQUJgOgWPbruVoTyslxSXVij89EY";
@@ -570,19 +594,73 @@
     return SITE_BASE_URL + path.replace(/^\//, '');
   }
 
+  // ---------- Editor de imágenes (recorte, rotación, achique automático) ----------
+
+  let cropperInstance = null;
+  let cropCallback = null;
+  let cropObjectUrl = null;
+
+  function openImageEditor(file, aspectRatio, callback) {
+    cropCallback = callback;
+    const modal = document.getElementById('image-editor-modal');
+    const img = document.getElementById('image-editor-img');
+    if (cropObjectUrl) URL.revokeObjectURL(cropObjectUrl);
+    cropObjectUrl = URL.createObjectURL(file);
+    img.src = cropObjectUrl;
+    modal.classList.remove('hidden');
+
+    img.onload = () => {
+      if (cropperInstance) cropperInstance.destroy();
+      cropperInstance = new Cropper(img, {
+        aspectRatio: aspectRatio || NaN,
+        viewMode: 1,
+        autoCropArea: 1,
+        background: false
+      });
+    };
+  }
+
+  function setCropAspect(ratio) {
+    if (cropperInstance) cropperInstance.setAspectRatio(ratio === null ? NaN : ratio);
+  }
+
+  function confirmCrop() {
+    if (!cropperInstance) return;
+    // maxWidth/maxHeight achica sola cualquier foto gigante de celular,
+    // sin que nadie tenga que pensar en el tamaño del archivo.
+    cropperInstance.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600, imageSmoothingQuality: 'high' }).toBlob((blob) => {
+      const cb = cropCallback;
+      closeImageEditor();
+      if (cb) cb(blob);
+    }, 'image/png');
+  }
+
+  function cancelCrop() { closeImageEditor(); }
+
+  function closeImageEditor() {
+    document.getElementById('image-editor-modal').classList.add('hidden');
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+    if (cropObjectUrl) { URL.revokeObjectURL(cropObjectUrl); cropObjectUrl = null; }
+    cropCallback = null;
+  }
+
   // ---------- Imágenes: subida (archivo, pegado, o click derecho → Pegar) ----------
 
   async function uploadCover(prefix, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
-    const localUrl = URL.createObjectURL(file);
+    openImageEditor(file, 16 / 9, (blob) => uploadCoverBlob(prefix, blob));
+  }
+
+  async function uploadCoverBlob(prefix, blob) {
+    const localUrl = URL.createObjectURL(blob);
     const prev = document.getElementById(`${prefix}-cover-preview`);
     prev.src = localUrl;
     prev.style.display = 'block';
     try {
       showGlobalMsg('Subiendo imagen…', true);
-      const base64 = await fileToBase64(file);
-      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'portada')}${extOf(file.name)}`;
+      const base64 = await fileToBase64(blob);
+      const path = `assets/uploads/${Date.now()}-portada.png`;
       localImageCache[path] = localUrl;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir portada: ${path}` });
       document.getElementById(`${prefix}-cover`).value = path;
@@ -702,11 +780,15 @@
   async function uploadInlineImage(prefix, file) {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { showGlobalMsg('La imagen pesa más de 4MB, probá con una más liviana.', false); return; }
+    openImageEditor(file, null, (blob) => uploadInlineBlob(prefix, blob));
+  }
+
+  async function uploadInlineBlob(prefix, blob) {
     try {
       showGlobalMsg('Subiendo imagen…', true);
-      const base64 = await fileToBase64(file);
-      const path = `assets/uploads/${Date.now()}-${slugify(file.name ? file.name.replace(/\.[^.]+$/, '') : 'imagen')}${extOf(file.name)}`;
-      const localUrl = URL.createObjectURL(file);
+      const base64 = await fileToBase64(blob);
+      const path = `assets/uploads/${Date.now()}-imagen.png`;
+      const localUrl = URL.createObjectURL(blob);
       localImageCache[path] = localUrl;
       await callFn({ action: 'putBinary', path, content: base64, message: `Subir imagen: ${path}` });
 
