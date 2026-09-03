@@ -71,6 +71,7 @@
   .badge { font-family: var(--f-mono); font-size:0.7rem; padding:3px 8px; border-radius:20px; display:inline-block; margin-left:8px; }
   .badge-draft { background: rgba(250,127,183,0.15); color: var(--pink); border:1px solid var(--pink-hot); }
   .badge-live { background: rgba(134,230,246,0.15); color: var(--cyan-bright); border:1px solid var(--cyan); }
+  .badge-featured { background: rgba(250,127,183,0.15); color: var(--pink); border:1px solid var(--pink-hot); }
 
   .pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin: 24px 0 8px; flex-wrap: wrap; }
   .pagination button {
@@ -127,6 +128,9 @@
     font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-dim);
   }
   .dropzone:hover, .dropzone:focus { border-color: var(--cyan-bright); outline: none; }
+  .dropzone.drag-over, .field textarea.drag-over, .visual-editor.drag-over {
+    border-color: var(--cyan-bright); background: rgba(134,230,246,0.08);
+  }
   .cover-preview { max-width: 240px; border-radius: var(--radius); border:1px solid var(--line); margin-top:10px; display:none; }
 
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--ink-dim); border-top-color: var(--cyan-bright); border-radius:50%; animation: spin 0.7s linear infinite; margin-right:6px; vertical-align:-2px;}
@@ -380,8 +384,11 @@
             <button class="btn btn-ghost" onclick="openPreview('n')">👁 Vista previa en pestaña nueva</button>
           </div>
 
-          <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:0.9rem;">
             <input type="checkbox" id="n-draft" style="width:auto;"> Guardar como borrador (no se muestra en la web)
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.9rem;">
+            <input type="checkbox" id="n-featured" style="width:auto;"> Destacar en la portada (Home)
           </label>
 
           <div class="btn-row">
@@ -485,6 +492,7 @@
     }
     loadList('r');
     loadList('n');
+    checkForPendingDrafts();
   }
 
   sb.auth.getSession().then(({ data }) => { if (data.session) showApp(data.session.user); });
@@ -879,6 +887,27 @@
   attachPasteCover('r-cover-drop', 'r');
   attachPasteCover('n-cover-drop', 'n');
 
+  // Arrastrar y soltar una imagen directo, tanto en la portada como
+  // en el cuerpo del texto (funciona en modo Markdown y en modo Visual).
+  function attachDragDrop(elId, onFile) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) onFile(file);
+    });
+  }
+  attachDragDrop('r-cover-drop', (file) => uploadCover('r', file));
+  attachDragDrop('n-cover-drop', (file) => uploadCover('n', file));
+  attachDragDrop('r-body', (file) => uploadInlineImage('r', file));
+  attachDragDrop('r-body-visual', (file) => uploadInlineImage('r', file));
+  attachDragDrop('n-body', (file) => uploadInlineImage('n', file));
+  attachDragDrop('n-body-visual', (file) => uploadInlineImage('n', file));
+
   // ---------- Vista previa real, en pestaña nueva ----------
 
   function absolutizeImages(markdown) {
@@ -1041,6 +1070,7 @@
         <button class="del-btn" onclick='event.stopPropagation(); deleteEntry("${p}", ${JSON.stringify(item.slug)})' title="Borrar">🗑</button>
         ${cover}
         <span class="badge ${item.draft ? 'badge-draft' : 'badge-live'}">${item.draft ? 'Borrador' : 'Publicada'}</span>
+        ${p === 'n' && item.featured ? '<span class="badge badge-featured">★ Destacada</span>' : ''}
         <h3 style="margin-top:10px;">${escapeHtml(item.title || '')}</h3>
         <div class="meta">${sub}</div>
       </div>`;
@@ -1062,6 +1092,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <span class="badge ${item.draft ? 'badge-draft' : 'badge-live'}">${item.draft ? 'Borrador' : 'Publicada'}</span>
+          ${p === 'n' && item.featured ? '<span class="badge badge-featured">★ Destacada</span>' : ''}
           <button class="btn btn-ghost" onclick='event.stopPropagation(); deleteEntry("${p}", ${JSON.stringify(item.slug)})'>Borrar</button>
         </div>
       </div>`;
@@ -1098,12 +1129,36 @@
 
   function startNew(p) {
     if (p === 'r') resetReviewForm(); else resetNoticiaForm();
+    offerDraftRecovery(p);
     showFormView(p);
   }
 
   function openEdit(p, slug) {
     if (p === 'r') editReview(slug); else editNoticia(slug);
+    offerDraftRecovery(p);
     showFormView(p);
+  }
+
+  function offerDraftRecovery(p) {
+    const key = draftKey(p);
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const snap = JSON.parse(raw);
+      const msg = draftKeySlug(key) === 'new'
+        ? '¿Tenés cambios sin guardar de una sesión anterior en esta nota nueva — querés recuperarlos?'
+        : '¿Tenés cambios sin guardar de una sesión anterior en esta nota — querés recuperarlos en vez de la versión publicada?';
+      if (confirm(msg)) {
+        applyDraftSnapshot(p, snap);
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch (e) {}
+  }
+
+  function draftKeySlug(key) {
+    const m = key.match(/^ep_draft_(?:r|n)_(.+)$/);
+    return m ? m[1] : null;
   }
 
   async function deleteEntry(p, slug) {
@@ -1178,6 +1233,7 @@
         message: `${isEditing ? 'Editar' : 'Nueva'} review: ${title}`
       });
       showGlobalMsg('Guardado. El sitio se actualiza en un rato corto.', true);
+      clearDraft('r');
       resetReviewForm();
       await loadList('r');
       showListView('r');
@@ -1201,6 +1257,7 @@
     document.getElementById('n-excerpt').value = content.excerpt || '';
     document.getElementById('n-body').value = content.body || '';
     document.getElementById('n-draft').checked = !!content.draft;
+    document.getElementById('n-featured').checked = !!content.featured;
     const prev = document.getElementById('n-cover-preview');
     if (content.cover) { prev.src = toPreviewUrl(content.cover); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
     document.getElementById('n-form-title').textContent = `Editando: ${content.title}`;
@@ -1210,6 +1267,7 @@
     editingNoticiaSlug = null;
     ['n-title','n-slug','n-cover','n-excerpt','n-body'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('n-draft').checked = false;
+    document.getElementById('n-featured').checked = false;
     document.getElementById('n-cover-preview').style.display = 'none';
     document.getElementById('n-form-title').textContent = 'Agregar nueva noticia';
     resetEditorMode('n');
@@ -1226,7 +1284,8 @@
       excerpt: document.getElementById('n-excerpt').value.trim(),
       body: document.getElementById('n-body').value.trim(),
       author: authorName(), date: new Date().toISOString(),
-      draft: document.getElementById('n-draft').checked
+      draft: document.getElementById('n-draft').checked,
+      featured: document.getElementById('n-featured').checked
     };
 
     const btn = document.getElementById('n-save-btn');
@@ -1244,6 +1303,7 @@
         message: `${isEditing ? 'Editar' : 'Nueva'} noticia: ${title}`
       });
       showGlobalMsg('Guardado. El sitio se actualiza en un rato corto.', true);
+      clearDraft('n');
       resetNoticiaForm();
       await loadList('n');
       showListView('n');
@@ -1252,6 +1312,110 @@
     } finally {
       btn.disabled = false; btn.textContent = 'Guardar';
     }
+  }
+  // ---------- Autoguardado local (salvavidas por si se cierra la pestaña) ----------
+
+  const AUTOSAVE_FIELDS = {
+    r: ['r-title', 'r-game', 'r-slug', 'r-score', 'r-cover', 'r-excerpt', 'r-body', 'r-draft'],
+    n: ['n-title', 'n-slug', 'n-cover', 'n-excerpt', 'n-body', 'n-draft', 'n-featured']
+  };
+  const autosaveTimers = { r: null, n: null };
+
+  function draftKey(prefix) {
+    const slug = prefix === 'r' ? editingReviewSlug : editingNoticiaSlug;
+    return `ep_draft_${prefix}_${slug || 'new'}`;
+  }
+
+  function scheduleAutosave(prefix) {
+    clearTimeout(autosaveTimers[prefix]);
+    autosaveTimers[prefix] = setTimeout(() => saveDraftNow(prefix), 1200);
+  }
+
+  function saveDraftNow(prefix) {
+    syncEditorToMarkdown(prefix);
+    const snap = {};
+    AUTOSAVE_FIELDS[prefix].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      snap[id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    const hasContent = (snap[`${prefix}-title`] || '').trim() || (snap[`${prefix}-body`] || '').trim();
+    if (!hasContent) { localStorage.removeItem(draftKey(prefix)); return; }
+    try { localStorage.setItem(draftKey(prefix), JSON.stringify(snap)); } catch (e) {}
+  }
+
+  function clearDraft(prefix) {
+    localStorage.removeItem(draftKey(prefix));
+  }
+
+  function applyDraftSnapshot(prefix, snap) {
+    AUTOSAVE_FIELDS[prefix].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || !(id in snap)) return;
+      if (el.type === 'checkbox') el.checked = !!snap[id]; else el.value = snap[id] || '';
+    });
+    const coverVal = document.getElementById(`${prefix}-cover`).value;
+    const prev = document.getElementById(`${prefix}-cover-preview`);
+    if (coverVal) { prev.src = toPreviewUrl(coverVal); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+  }
+
+  // Enganchamos el autoguardado a cada campo (y al editor visual aparte,
+  // porque ahí los cambios no tocan directamente el textarea).
+  ['r', 'n'].forEach(prefix => {
+    AUTOSAVE_FIELDS[prefix].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', () => scheduleAutosave(prefix));
+    });
+    const visual = document.getElementById(`${prefix}-body-visual`);
+    if (visual) visual.addEventListener('input', () => scheduleAutosave(prefix));
+  });
+
+  // Al abrir sesión, avisa si quedó algo sin guardar de una vez anterior.
+  function checkForPendingDrafts() {
+    const found = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('ep_draft_')) found.push(k);
+    }
+    if (!found.length) return;
+
+    const items = found.map(k => {
+      const m = k.match(/^ep_draft_(r|n)_(.+)$/);
+      if (!m) return '';
+      const [, p, slugPart] = m;
+      const kind = p === 'r' ? 'review' : 'noticia';
+      const label = slugPart === 'new' ? `Una ${kind} nueva sin guardar` : `Cambios sin guardar en "${slugPart}"`;
+      return `<div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <span>${label}</span>
+        <span>
+          <a href="#" onclick="event.preventDefault(); recoverDraftKey('${k}')">Recuperar</a>
+          &nbsp;·&nbsp;
+          <a href="#" onclick="event.preventDefault(); localStorage.removeItem('${k}'); checkForPendingDrafts();">Descartar</a>
+        </span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('global-msg').innerHTML =
+      `<div class="status-msg status-warn"><strong>Encontramos cambios sin guardar de una sesión anterior:</strong>${items}</div>`;
+  }
+
+  function recoverDraftKey(key) {
+    const m = key.match(/^ep_draft_(r|n)_(.+)$/);
+    if (!m) return;
+    const [, p, slugPart] = m;
+    if (slugPart === 'new') {
+      if (p === 'r') resetReviewForm(); else resetNoticiaForm();
+    } else {
+      if (p === 'r') editReview(slugPart); else editNoticia(slugPart);
+    }
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try { applyDraftSnapshot(p, JSON.parse(raw)); } catch (e) {}
+    }
+    switchTab(p === 'r' ? 'reviews' : 'noticias');
+    showFormView(p);
+    document.getElementById('global-msg').innerHTML = '';
   }
 </script>
 
